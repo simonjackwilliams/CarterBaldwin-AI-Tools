@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SearchComms Pro</title>
+<style>
+:root { color-scheme: light; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: #F2F2F2;
+  color: #1A1A1A;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── HEADER ── */
+.header {
+  background: #111111;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 0;
+  border-bottom: 1px solid #222;
+}
+.logo { display: flex; align-items: center; gap: 9px; margin-right: 16px; flex-shrink: 0; }
+.logo-sq {
+  width: 28px; height: 28px; background: #E85D2A; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.logo-words { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-top { color: #fff; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
+.logo-pro { color: #E85D2A; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+.nav-divider { width: 1px; background: #333; height: 24px; margin: 0 14px; flex-shrink: 0; }
+.nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+.nav-btn {
+  padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; background: transparent; color: #777;
+  transition: all 0.15s; font-family: inherit; white-space: nowrap;
+}
+.nav-btn:hover { color: #ccc; }
+.nav-btn.active { background: #E85D2A; color: #fff; }
+.platform-tag { color: #444; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; white-space: nowrap; }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.visible { display: block; }
+
+/* ── SHARED FIELD STYLES ── */
+select, textarea, input[type="text"], input[type="number"], input[type="date"] {
+  width: 100%; border: 1px solid #DCDCDC; border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; font-family: inherit;
+  color: #1A1A1A; background: #fff; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px; cursor: pointer;
+}
+select:focus, textarea:focus, input:focus {
+  border-color: #E85D2A; box-shadow: 0 0 0 3px rgba(232,93,42,0.1);
+}
+textarea { resize: vertical; min-height: 90px; }
+.hint { font-size: 11px; color: #BBBBBB; margin-top: 5px; }
+.req { color: #E85D2A; }
+
+.primary-btn {
+  width: 100%; padding: 12px; background: #E85D2A; color: #fff;
+  border: none; border-radius: 7px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.15s;
+}
+.primary-btn:hover:not(:disabled) { background: #CF4D20; }
+.primary-btn:disabled { background: #E8B89E; cursor: not-allowed; }
+
+.ghost-btn {
+  background: none; border: none; color: #999; font-size: 13px;
+  cursor: pointer; font-family: inherit; padding: 5px 10px;
+  border-radius: 5px; flex-shrink: 0;
+}
+.ghost-btn:hover { background: #EBEBEB; color: #555; }
+
+.error-box {
+  background: #FEF2F2; border: 1px solid #FECACA; border-radius: 7px;
+  padding: 12px 14px; color: #DC2626; font-size: 13px; line-height: 1.5;
+}
+
+.spinner {
+  width: 30px; height: 30px; border: 3px solid #E5E5E5;
+  border-top-color: #E85D2A; border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════
+   DRAFTING SCREEN
+══════════════════════════════════════════ */
+.drafting-layout {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  min-height: calc(100vh - 52px);
+}
+
+/* ── FORM PANEL ── */
+.form-panel {
+  background: #fff;
+  padding: 28px 22px;
+  border-right: 1px solid #E5E5E5;
+}
+.form-title { font-size: 17px; font-weight: 700; color: #111; margin-bottom: 22px; }
+.field { margin-bottom: 16px; }
+.field-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+
+/* ── RESULTS PANEL ── */
+.results-panel {
+  padding: 28px 32px;
+  background: #F7F7F7;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 52px);
+}
+
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; gap: 14px;
+}
+.empty-icon {
+  width: 54px; height: 54px; border-radius: 12px; background: #ECECEC;
+  display: flex; align-items: center; justify-content: center;
+}
+.empty-state p { font-size: 13px; max-width: 240px; line-height: 1.6; color: #BBB; }
+
+.loading-overlay {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+}
+
+/* Results header */
+.results-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 14px;
+}
+.results-header-left { display: flex; flex-direction: column; gap: 4px; }
+.msg-type-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; background: #E85D2A; color: #fff;
+}
+.badge-gray {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  background: #F0F0F0; color: #666;
+}
+
+.results-title { font-size: 20px; font-weight: 700; color: #111; }
+
+/* Subject line picker */
+.subject-picker {
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.subject-picker-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: #AAA; margin-bottom: 10px;
+}
+.subject-options { display: flex; flex-direction: column; gap: 6px; }
+.subject-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 10px; border-radius: 5px; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s; background: #FAFAFA;
+}
+.subject-option:hover { background: #FFF0EA; border-color: #FDDDD0; }
+.subject-option.active { background: #FFF0EA; border-color: #E85D2A; }
+.subject-num { font-size: 11px; font-weight: 700; color: #E85D2A; flex-shrink: 0; margin-top: 1px; }
+.subject-text { font-size: 13px; color: #333; }
+
+/* Tabs */
+.tabs {
+  display: flex; border-bottom: 2px solid #E5E5E5;
+  margin-bottom: 16px; overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 8px 13px; border: none; background: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: #999; white-space: nowrap;
+  font-family: inherit; position: relative; bottom: -2px;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab-btn:hover { color: #555; }
+.tab-btn.active { color: #E85D2A; border-bottom-color: #E85D2A; }
+
+/* Message card */
+.message-card {
+  background: #fff; border: 1px solid #E5E5E5;
+  border-radius: 8px; overflow: hidden;
+}
+.message-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px; border-bottom: 1px solid #F2F2F2; background: #FAFAFA;
+}
+.tab-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #E85D2A; }
+.copy-btn {
+  padding: 4px 12px; border: 1px solid #DCDCDC; border-radius: 4px;
+  background: #fff; font-size: 11px; font-weight: 700; color: #666;
+  cursor: pointer; font-family: inherit; letter-spacing: 0.5px; transition: all 0.15s;
+}
+.copy-btn:hover { border-color: #E85D2A; color: #E85D2A; }
+.copy-btn.copied { background: #E85D2A; color: #fff; border-color: #E85D2A; }
+
+.subject-line { padding: 12px 16px; border-bottom: 1px solid #F5F5F5; font-size: 13px; color: #888; }
+.subject-line strong { color: #111; font-weight: 600; }
+
+.message-body { padding: 20px 16px; font-size: 14px; line-height: 1.75; color: #1A1A1A; white-space: pre-wrap; }
+
+/* Analysis panel */
+.analysis-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.analysis-2col .full { grid-column: 1 / -1; }
+.acard { background: #fff; border: 1px solid #E5E5E5; border-radius: 8px; padding: 16px; }
+.acard h4 { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+.acard p { font-size: 13px; line-height: 1.65; color: #333; }
+.alist { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.alist li { font-size: 13px; color: #333; display: flex; gap: 8px; line-height: 1.5; align-items: flex-start; }
+.alist li::before { content: '•'; color: #E85D2A; flex-shrink: 0; font-weight: 700; }
+.alist.green li::before { content: '✓'; color: #15803D; }
+.alist.amber li::before { content: '⚠'; color: #B45309; font-size: 11px; }
+
+/* Starting points */
+.starting-points { margin-top: 24px; }
+.starting-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #AAA; margin-bottom: 10px;
+}
+.sample-card {
+  border: 1px solid #EBEBEB; border-radius: 7px; padding: 12px 14px;
+  cursor: pointer; transition: all 0.15s; background: #fff; margin-bottom: 8px;
+}
+.sample-card:hover { border-color: #E85D2A; background: #FFF8F5; }
+.sample-card:last-child { margin-bottom: 0; }
+.sample-type {
+  font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+  text-transform: uppercase; color: #E85D2A; margin-bottom: 5px;
+}
+.sample-text { font-size: 12px; color: #555; line-height: 1.5; }
+
+/* Final draft highlight */
+.final-draft-card {
+  background: #fff; border: 2px solid #E85D2A;
+  border-radius: 8px; overflow: hidden;
+}
+.final-draft-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px; border-bottom: 1px solid #FDDDD0;
+  background: #FFF6F2;
+}
+.final-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #E85D2A; }
+
+/* ══════════════════════════════════════════
+   SEARCH PROGRESS SCREEN
+══════════════════════════════════════════ */
+.progress-screen {
+  max-width: 620px; margin: 0 auto;
+  padding: 28px 20px 40px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.sec-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #E85D2A;
+  margin-bottom: 12px; margin-top: 24px;
+}
+.sec-label:first-child { margin-top: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid2 .full { grid-column: 1 / -1; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #888; }
+.num-input {
+  border: 1px solid #DCDCDC; border-radius: 6px; padding: 8px 10px;
+  font-size: 14px; font-family: inherit; color: #1A1A1A; background: #fff;
+  outline: none; width: 100%; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.num-input:focus { border-color: #E85D2A; box-shadow: 0 0 0 3px rgba(232,93,42,0.1); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: 1.5px solid #E0E0E0; background: #fff; color: #666;
+  font-family: inherit; transition: all 0.15s; white-space: nowrap;
+}
+.chip:hover { border-color: #E85D2A; color: #E85D2A; }
+.chip.active { background: #E85D2A; border-color: #E85D2A; color: #fff; }
+.dropzone {
+  border: 1.5px dashed #DCDCDC; border-radius: 8px; padding: 22px 16px;
+  text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  background: #FAFAFA; margin-top: 10px;
+}
+.dropzone:hover, .dropzone.drag-over { border-color: #E85D2A; background: #FFF6F2; }
+.dropzone input { display: none; }
+.dropzone-icon { margin-bottom: 8px; }
+.dropzone p { font-size: 13px; color: #777; margin-bottom: 4px; }
+.dropzone small { font-size: 11px; color: #BBB; }
+.file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.file-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #F5F5F5; border-radius: 6px; padding: 7px 12px;
+  font-size: 12px; color: #555;
+}
+.file-item button { background: none; border: none; cursor: pointer; color: #AAA; font-size: 16px; line-height: 1; }
+.file-item button:hover { color: #DC2626; }
+.output-preview {
+  background: #fff; border: 1px solid #E8E8E8; border-radius: 10px;
+  padding: 32px 24px; text-align: center;
+}
+.output-preview-icon {
+  width: 52px; height: 52px; background: #FFF0EA; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+}
+.output-preview h3 { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.output-preview p { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 18px; }
+.output-list { background: #FAFAFA; border: 1px solid #EEEEEE; border-radius: 8px; padding: 16px; text-align: left; }
+.output-list-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #AAA; margin-bottom: 12px; }
+.output-list ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.output-list li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #444; }
+.output-list li span.ck { width: 18px; height: 18px; background: #E85D2A; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.prog-results-wrap { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+.pcard { background: #fff; border: 1px solid #E5E5E5; border-radius: 10px; overflow: hidden; }
+.pcard-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid #F2F2F2; background: #FAFAFA; }
+.pcard-title { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #888; }
+.pcard-body { padding: 18px; }
+.pcard-body p { font-size: 13px; line-height: 1.65; color: #333; }
+.pipeline-stages { display: flex; flex-direction: column; gap: 10px; }
+.stage-row { display: flex; flex-direction: column; gap: 4px; }
+.stage-meta { display: flex; justify-content: space-between; align-items: center; }
+.stage-name { font-size: 12px; font-weight: 600; color: #555; }
+.stage-count { font-size: 12px; color: #888; }
+.stage-bar-bg { height: 6px; background: #F0F0F0; border-radius: 3px; overflow: hidden; }
+.stage-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.stage-note { font-size: 11px; color: #AAA; }
+.plan-days { display: flex; flex-direction: column; gap: 10px; }
+.plan-day { display: flex; gap: 12px; align-items: flex-start; }
+.plan-day-badge { flex-shrink: 0; min-width: 60px; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-align: center; letter-spacing: 0.5px; }
+.priority-high { background: #FEF2F2; color: #DC2626; }
+.priority-medium { background: #FEF3C7; color: #B45309; }
+.priority-low { background: #F0F9FF; color: #0369A1; }
+.plan-day-content { flex: 1; }
+.plan-day-action { font-size: 13px; color: #1A1A1A; font-weight: 500; }
+.plan-day-owner { font-size: 11px; color: #AAA; margin-top: 2px; }
+.email-subject { padding: 12px 18px; border-bottom: 1px solid #F5F5F5; font-size: 13px; color: #888; }
+.email-subject strong { color: #111; }
+.email-body-text { padding: 18px; font-size: 13px; line-height: 1.75; color: #1A1A1A; white-space: pre-wrap; }
+.milestone-list { display: flex; flex-direction: column; gap: 8px; }
+.milestone-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F5F5F5; }
+.milestone-item:last-child { border-bottom: none; }
+.ms-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ms-complete { background: #15803D; }
+.ms-progress { background: #E85D2A; }
+.ms-pending { background: #E0E0E0; }
+.ms-overdue { background: #DC2626; }
+.ms-name { font-size: 13px; color: #333; flex: 1; }
+.ms-status { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.ms-status.complete { color: #15803D; }
+.ms-status.progress { color: #E85D2A; }
+.ms-status.pending { color: #AAA; }
+.ms-status.overdue { color: #DC2626; }
+.prog-loading { text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+@media (max-width: 640px) {
+  .drafting-layout { grid-template-columns: 1fr; }
+  .analysis-2col { grid-template-columns: 1fr; }
+  .analysis-2col .full { grid-column: 1; }
+  .grid2 { grid-template-columns: 1fr; }
+  .grid2 .full { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-sq">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+        <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.7"/>
+        <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.7"/>
+        <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="logo-words">
+      <span class="logo-top">SearchComms</span>
+      <span class="logo-pro">Pro</span>
+    </div>
+  </div>
+  <div class="nav-divider"></div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showScreen('drafting', this)">Message Drafting</button>
+    <button class="nav-btn" onclick="showScreen('progress', this)">Search Progress</button>
+  </nav>
+  <span class="platform-tag">Executive Search Platform</span>
+</header>
+
+<!-- ══════════════════════════════════════════
+     DRAFTING SCREEN
+══════════════════════════════════════════ -->
+<div class="screen visible" id="screen-drafting">
+  <div class="drafting-layout">
+
+    <!-- Form -->
+    <div class="form-panel">
+      <h2 class="form-title">Draft a Message</h2>
+
+      <div class="field">
+        <label class="field-label">Message Type <span class="req">*</span></label>
+        <select id="msg-type">
+          <option value="">Select a message type...</option>
+          <optgroup label="Outreach">
+            <option>Candidate Outreach — Cold</option>
+            <option>Candidate Outreach — Warm / Referral</option>
+            <option>Business Development Outreach</option>
+            <option>Re-Engagement</option>
+          </optgroup>
+          <optgroup label="Follow-Up">
+            <option>Candidate Follow-Up — No Response</option>
+            <option>Candidate Follow-Up — After Call</option>
+            <option>Client Follow-Up — After Intake Call</option>
+          </optgroup>
+          <optgroup label="Process">
+            <option>Status Update — Active Search</option>
+            <option>Weekly Search Update</option>
+            <option>Interview Scheduling</option>
+            <option>Candidate Presentation to Client</option>
+            <option>Reference Check Request</option>
+            <option>Slow Process Update</option>
+            <option>Compensation Clarification</option>
+          </optgroup>
+          <optgroup label="Decisions">
+            <option>Candidate Not Selected — Early Stage</option>
+            <option>Candidate Not Selected — Finalist</option>
+            <option>Candidate Decline Response</option>
+            <option>Offer Stage — Presenting Offer</option>
+            <option>Offer Stage — Counter / Negotiation</option>
+            <option>Thank-You Note</option>
+          </optgroup>
+          <optgroup label="Internal">
+            <option>Internal Team Update</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Recipient</label>
+        <select id="recipient">
+          <option value="">Select recipient type</option>
+          <option>Candidate</option>
+          <option>Client</option>
+          <option>Reference Contact</option>
+          <option>Internal Team</option>
+          <option>Prospective Client</option>
+          <option>Assistant / Coordinator</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Tone</label>
+        <select id="tone">
+          <option>Professional, warm, and concise (default)</option>
+          <option>Direct and brief</option>
+          <option>Warm and personal</option>
+          <option>Formal and polished</option>
+          <option>Conversational</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Context <span class="req">*</span></label>
+        <textarea id="context" rows="6" placeholder="Provide context for this communication:&#10;• Candidate name and current role&#10;• Search name and client&#10;• Key points to convey&#10;• Desired next step or ask"></textarea>
+        <p class="hint">More context produces stronger output.</p>
+      </div>
+
+      <div id="draft-error" class="error-box" style="display:none; margin-bottom:14px;"></div>
+
+      <button class="primary-btn" id="gen-btn" onclick="generateMessage()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+        </svg>
+        Generate Message
+      </button>
+
+      <!-- STARTING POINTS -->
+      <div class="starting-points">
+        <div class="starting-label">Starting Points</div>
+        <div class="sample-card" onclick="loadSample('Candidate Outreach — Cold', 'Candidate', 'Initial outreach for a Chief Marketing Officer opportunity at a national B2B manufacturing company — candidate has strong brand and demand generation background')">
+          <div class="sample-type">Candidate Outreach</div>
+          <div class="sample-text">Initial outreach for a Chief Marketing Officer opportunity at a national B2B manufacturing company — candidate has strong brand and demand generation background</div>
+        </div>
+        <div class="sample-card" onclick="loadSample('Weekly Search Update', 'Client', 'Week 3 progress update — 14 initial conversations completed, two strong candidates identified, recommending a calibration call before advancing further')">
+          <div class="sample-type">Weekly Search Update</div>
+          <div class="sample-text">Week 3 progress update — 14 initial conversations completed, two strong candidates identified, recommending a calibration call before advancing further</div>
+        </div>
+        <div class="sample-card" onclick="loadSample('Candidate Not Selected — Finalist', 'Candidate', 'Respectfully declining a finalist following the client\'s final-round interviews — strong relationship, want to stay in contact for future searches')">
+          <div class="sample-type">Candidate Not Selected / Rejection</div>
+          <div class="sample-text">Respectfully declining a finalist following the client's final-round interviews — strong relationship, want to stay in contact for future searches</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-panel" id="results-panel">
+
+      <div class="empty-state" id="draft-empty">
+        <div class="empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CCC" stroke-width="1.5" stroke-linecap="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <p style="font-weight:600;color:#888;font-size:15px;margin-bottom:4px;">Your message will appear here</p>
+        <p>Complete the form and click <strong style="color:#555;">Generate Message</strong> to receive 7 polished variants ready to send or adapt.</p>
+      </div>
+
+      <div class="loading-overlay" id="draft-loading" style="display:none;">
+        <div class="spinner"></div>
+        <span style="font-size:13px;color:#AAA;">Drafting messages...</span>
+      </div>
+
+      <div id="draft-results" style="display:none; flex-direction:column; flex:1; gap:0;">
+
+        <!-- Header row -->
+        <div class="results-header">
+          <div class="results-header-left">
+            <div class="msg-type-row">
+              <span class="badge" id="result-type-badge">MESSAGE</span>
+              <span class="badge-gray" id="result-recipient-badge">CANDIDATE</span>
+            </div>
+            <h2 class="results-title">Message Generated</h2>
+          </div>
+          <button class="ghost-btn" onclick="clearDraft()">New Draft</button>
+        </div>
+
+        <!-- Subject line picker -->
+        <div class="subject-picker" id="subject-picker" style="display:none;">
+          <div class="subject-picker-label">Recommended Subject Lines</div>
+          <div class="subject-options" id="subject-options"></div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="finalDraft" onclick="switchDraftTab(this)">✦ Send-Ready</button>
+          <button class="tab-btn" data-tab="primaryDraft" onclick="switchDraftTab(this)">Primary</button>
+          <button class="tab-btn" data-tab="shorter" onclick="switchDraftTab(this)">Shorter</button>
+          <button class="tab-btn" data-tab="warmer" onclick="switchDraftTab(this)">Warmer</button>
+          <button class="tab-btn" data-tab="direct" onclick="switchDraftTab(this)">Direct</button>
+          <button class="tab-btn" data-tab="followUp" onclick="switchDraftTab(this)">Follow-Up</button>
+          <button class="tab-btn" data-tab="linkedinText" onclick="switchDraftTab(this)">LinkedIn / Text</button>
+          <button class="tab-btn" data-tab="analysis" onclick="switchDraftTab(this)">Analysis</button>
+        </div>
+
+        <!-- Message card (non-analysis tabs) -->
+        <div class="message-card" id="message-card">
+          <div class="message-card-header">
+            <span class="tab-label" id="tab-label">SEND-READY VERSION</span>
+            <button class="copy-btn" id="copy-btn" onclick="copyMessage()">COPY</button>
+          </div>
+          <div class="subject-line" id="subject-line">
+            SUBJECT — <strong id="subject-text"></strong>
+          </div>
+          <div class="message-body" id="message-body"></div>
+        </div>
+
+        <!-- Analysis panel -->
+        <div id="analysis-panel" style="display:none;">
+          <div class="analysis-2col">
+            <div class="acard full">
+              <h4>Message Type Identified</h4>
+              <p id="a-msgtype" style="font-weight:600; color:#111;"></p>
+            </div>
+            <div class="acard">
+              <h4>Key Points Included</h4>
+              <ul class="alist green" id="a-keypoints"></ul>
+            </div>
+            <div class="acard">
+              <h4>Possible Risks — Check Before Sending</h4>
+              <ul class="alist amber" id="a-risks"></ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SEARCH PROGRESS SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-progress">
+  <div class="progress-screen">
+
+    <div class="sec-label">Search Information</div>
+    <div class="grid2">
+      <div class="fg">
+        <label>Client <span class="req">*</span></label>
+        <input type="text" id="p-client" placeholder="Client name">
+      </div>
+      <div class="fg">
+        <label>Role <span class="req">*</span></label>
+        <input type="text" id="p-role" placeholder="Role title">
+      </div>
+      <div class="fg">
+        <label>Kickoff Date</label>
+        <input type="date" id="p-kickoff">
+      </div>
+      <div class="fg">
+        <label>Today's Date</label>
+        <input type="date" id="p-today">
+      </div>
+      <div class="fg">
+        <label>Lead Consultant</label>
+        <input type="text" id="p-consultant" placeholder="Consultant name">
+      </div>
+      <div class="fg">
+        <label>Next Client Meeting</label>
+        <input type="date" id="p-meeting">
+      </div>
+      <div class="fg full">
+        <label>Current Stage</label>
+        <select id="p-stage">
+          <option value="">Select current stage</option>
+          <option>Week 1 — Kickoff & Position Profiling</option>
+          <option>Week 2 — Target Research & List Building</option>
+          <option>Week 3 — Initial Outreach</option>
+          <option>Week 4 — Screening & Assessment</option>
+          <option>Week 5 — Shortlist Development</option>
+          <option>Week 6 — Client Interviews</option>
+          <option>Week 7 — Offer & Close</option>
+          <option>Extended Search</option>
+          <option>On Hold</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec-label" style="margin-top:28px;">Loxo Pipeline Counts</div>
+    <div class="grid2">
+      <div class="fg"><label>Targets</label><input class="num-input" type="number" id="lx-targets" min="0" value="0"></div>
+      <div class="fg"><label>Prospects</label><input class="num-input" type="number" id="lx-prospects" min="0" value="0"></div>
+      <div class="fg"><label>Engaged</label><input class="num-input" type="number" id="lx-engaged" min="0" value="0"></div>
+      <div class="fg"><label>Evaluating</label><input class="num-input" type="number" id="lx-evaluating" min="0" value="0"></div>
+      <div class="fg"><label>Candidates</label><input class="num-input" type="number" id="lx-candidates" min="0" value="0"></div>
+      <div class="fg"><label>Semi-Finalists</label><input class="num-input" type="number" id="lx-semifinalists" min="0" value="0"></div>
+      <div class="fg"><label>Finalists</label><input class="num-input" type="number" id="lx-finalists" min="0" value="0"></div>
+      <div class="fg"><label>Declined</label><input class="num-input" type="number" id="lx-declined" min="0" value="0"></div>
+    </div>
+
+    <div class="sec-label" style="margin-top:28px;">Analysis Focus</div>
+    <div class="chip-row" id="focus-chips">
+      <button class="chip active" data-focus="Full Analysis" onclick="selectFocus(this)">Full Analysis</button>
+      <button class="chip" data-focus="7-Day Plan" onclick="selectFocus(this)">7-Day Plan</button>
+      <button class="chip" data-focus="Meeting Prep" onclick="selectFocus(this)">Meeting Prep</button>
+      <button class="chip" data-focus="Client Email" onclick="selectFocus(this)">Client Email</button>
+      <button class="chip" data-focus="Internal Update" onclick="selectFocus(this)">Internal Update</button>
+      <button class="chip" data-focus="Pipeline Risk" onclick="selectFocus(this)">Pipeline Risk</button>
+      <button class="chip" data-focus="Recovery Plan" onclick="selectFocus(this)">Recovery Plan</button>
+    </div>
+
+    <div class="sec-label" style="margin-top:28px;">Context, Notes &amp; Documents</div>
+    <textarea id="p-context" rows="6" placeholder="Add context to strengthen the analysis:&#10;• Recent candidate conversations&#10;• Client feedback and calibration notes&#10;• Outreach response patterns&#10;• Market observations or compensation data"></textarea>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()"
+         ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+      <input type="file" id="file-input" multiple accept=".txt,.md,.csv,.docx,.pdf,.pptx" onchange="handleFiles(this.files)">
+      <div class="dropzone-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CCC" stroke-width="1.5" stroke-linecap="round">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <p>Drop files here or click to upload</p>
+      <small>.txt · .md · .csv · .docx · .pdf · .pptx</small>
+    </div>
+    <div class="file-list" id="file-list"></div>
+
+    <div id="prog-error" class="error-box" style="display:none; margin-top:16px;"></div>
+
+    <div style="margin-top:20px;">
+      <button class="primary-btn" id="analyze-btn" onclick="analyzeSearch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analyze Search
+      </button>
+    </div>
+
+    <div id="prog-empty" style="margin-top:24px;">
+      <div class="output-preview">
+        <div class="output-preview-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E85D2A" stroke-width="1.5" stroke-linecap="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </div>
+        <h3>Analysis will appear here</h3>
+        <p>Enter search details and Loxo pipeline counts, then click <strong>Analyze Search</strong> for a full 49-day framework assessment.</p>
+        <div class="output-list">
+          <div class="output-list-title">Output Includes</div>
+          <ul>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>49-day milestone status and tracking</li>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>Loxo pipeline health by stage</li>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>7-day action plan with role owners</li>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>Client update email — ready to send</li>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>Internal team update</li>
+            <li><span class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,6 5,9 10,3"/></svg></span>Strategy and search recommendations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="prog-loading" class="prog-loading" style="display:none;">
+      <div class="spinner"></div>
+      <span style="font-size:13px;color:#AAA;">Analyzing search...</span>
+    </div>
+
+    <div id="prog-results" class="prog-results-wrap" style="display:none;"></div>
+
+  </div>
+</div>
+
+<script>
+// ── SAMPLE LOADER ─────────────────────────────────────────────────
+function loadSample(msgType, recipient, context) {
+  // Set message type
+  const typeEl = document.getElementById('msg-type');
+  for (let i = 0; i < typeEl.options.length; i++) {
+    if (typeEl.options[i].value === msgType || typeEl.options[i].text === msgType) {
+      typeEl.selectedIndex = i; break;
+    }
+  }
+  // Set recipient
+  const recEl = document.getElementById('recipient');
+  for (let i = 0; i < recEl.options.length; i++) {
+    if (recEl.options[i].value === recipient || recEl.options[i].text === recipient) {
+      recEl.selectedIndex = i; break;
+    }
+  }
+  // Set context
+  document.getElementById('context').value = context;
+  // Scroll form into view
+  document.getElementById('context').focus();
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let draftMsgs = null;
+let activeDraftTab = 'finalDraft';
+let activeFocus = 'Full Analysis';
+let uploadedFiles = [];
+
+// ── NAV ───────────────────────────────────────────────────────────
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('visible');
+  btn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+(function() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  document.getElementById('p-today').value = `${y}-${m}-${d}`;
+})();
+
+// ── FOCUS CHIPS ───────────────────────────────────────────────────
+function selectFocus(btn) {
+  document.querySelectorAll('#focus-chips .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  activeFocus = btn.dataset.focus;
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────────────
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('dropzone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('drag-over'); handleFiles(e.dataTransfer.files); }
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => { uploadedFiles.push({ name: file.name, text: e.target.result }); renderFileList(); };
+    reader.readAsText(file);
+  });
+}
+function removeFile(idx) { uploadedFiles.splice(idx, 1); renderFileList(); }
+function renderFileList() {
+  document.getElementById('file-list').innerHTML = uploadedFiles.map((f, i) =>
+    `<div class="file-item"><span>${f.name}</span><button onclick="removeFile(${i})">×</button></div>`
+  ).join('');
+}
+
+// ── DRAFT TAB SWITCHING ───────────────────────────────────────────
+const TAB_LABELS = {
+  finalDraft: 'SEND-READY VERSION',
+  primaryDraft: 'PRIMARY DRAFT',
+  shorter: 'SHORTER VERSION',
+  warmer: 'WARMER VERSION',
+  direct: 'MORE DIRECT VERSION',
+  followUp: 'FOLLOW-UP VERSION',
+  linkedinText: 'LINKEDIN / TEXT VERSION',
+};
+
+function switchDraftTab(btn) {
+  const tab = btn.dataset.tab;
+  activeDraftTab = tab;
+  document.querySelectorAll('#draft-results .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const isAnalysis = tab === 'analysis';
+  document.getElementById('message-card').style.display = isAnalysis ? 'none' : 'block';
+  document.getElementById('analysis-panel').style.display = isAnalysis ? 'block' : 'none';
+
+  // Show subject picker only on email-type tabs (not linkedin, not analysis)
+  const showPicker = !isAnalysis && tab !== 'linkedinText' && draftMsgs?.subjectLines?.length;
+  document.getElementById('subject-picker').style.display = showPicker ? 'block' : 'none';
+
+  if (!isAnalysis && draftMsgs) renderDraftMsg(tab);
+}
+
+function renderDraftMsg(tab) {
+  const m = draftMsgs[tab];
+  if (!m) return;
+  document.getElementById('tab-label').textContent = TAB_LABELS[tab] || tab.toUpperCase();
+
+  const subEl = document.getElementById('subject-line');
+  if (m.subject) {
+    subEl.style.display = 'block';
+    document.getElementById('subject-text').textContent = m.subject;
+  } else {
+    subEl.style.display = 'none';
+  }
+  document.getElementById('message-body').textContent = m.body || '';
+  const cb = document.getElementById('copy-btn');
+  cb.textContent = 'COPY'; cb.classList.remove('copied');
+}
+
+function renderSubjectPicker(subjects) {
+  if (!subjects?.length) { document.getElementById('subject-picker').style.display = 'none'; return; }
+  document.getElementById('subject-picker').style.display = 'block';
+  document.getElementById('subject-options').innerHTML = subjects.map((s, i) => `
+    <div class="subject-option${i === 0 ? ' active' : ''}" onclick="selectSubject(this, '${escAttr(s)}')">
+      <span class="subject-num">${i + 1}</span>
+      <span class="subject-text">${escHtml(s)}</span>
+    </div>
+  `).join('');
+}
+
+function selectSubject(el, subject) {
+  document.querySelectorAll('.subject-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  // Update the subject line in the current message view
+  document.getElementById('subject-text').textContent = subject;
+}
+
+function renderDraftAnalysis() {
+  if (!draftMsgs) return;
+  document.getElementById('a-msgtype').textContent = draftMsgs.messageType || '';
+  fillList('a-keypoints', draftMsgs.keyPoints);
+  fillList('a-risks', draftMsgs.possibleRisks);
+}
+
+function copyMessage() {
+  if (!draftMsgs?.[activeDraftTab]) return;
+  const m = draftMsgs[activeDraftTab];
+  const subjectShown = document.getElementById('subject-text').textContent;
+  const text = (m.subject || subjectShown ? 'Subject: ' + (subjectShown || m.subject) + '\n\n' : '') + (m.body || '');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'COPIED'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {});
+}
+
+function clearDraft() {
+  draftMsgs = null;
+  document.getElementById('draft-results').style.display = 'none';
+  document.getElementById('draft-empty').style.display = 'flex';
+}
+
+// ── EXTRACT TEXT FROM askClaude RESPONSE ──────────────────────────
+function extractText(raw) {
+  if (typeof raw === 'string') return raw;
+  if (!raw || typeof raw !== 'object') return String(raw);
+  // Handle {content: [{text: "..."}]} shape (standard Claude API)
+  if (Array.isArray(raw.content) && raw.content[0]?.text) return raw.content[0].text;
+  // Handle {content: "..."} shape
+  if (typeof raw.content === 'string') return raw.content;
+  // Handle {text: "..."} shape
+  if (typeof raw.text === 'string') return raw.text;
+  // Handle {response: "..."} shape
+  if (typeof raw.response === 'string') return raw.response;
+  // Last resort: serialize so we can at least see what came back
+  return JSON.stringify(raw);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function fillList(id, items) {
+  document.getElementById(id).innerHTML = (items || []).map(i => `<li>${escHtml(String(i))}</li>`).join('');
+}
+function showErr(elId, msg) { const el = document.getElementById(elId); el.textContent = msg; el.style.display = 'block'; }
+function hideErr(elId) { document.getElementById(elId).style.display = 'none'; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// ── MESSAGE GENERATION ─────────────────────────────────────────────────────
+const SYS_MSG = `You are an executive search communication assistant for Carter Baldwin Executive Search. Your job is to draft professional, polished, natural-sounding messages — not robotic or generic AI-sounding text.
+
+You draft emails, LinkedIn messages, client updates, candidate follow-ups, internal updates, and all other executive search communications.
+
+Important rules:
+- Do not invent facts not provided in the context
+- Do not overpromise on timelines or outcomes
+- Keep messages concise unless the context calls for more
+- Avoid exaggerated or overly formal language
+- Make it sound like it came from a thoughtful search professional
+- Maintain confidentiality — do not include sensitive details unless provided
+- Use [First Name], [Your Name], [Company], [Role Title], [Compensation Range] as placeholders when details are missing
+- Preserve the consultant's intended meaning
+- No markdown formatting in message bodies (no **, no #, no -)
+- Use plain line breaks only
+
+Generate 7 distinct message variants plus analysis. Return ONLY a valid JSON object — no markdown fences, no explanation.
+
+JSON structure:
+{
+  "messageType": "Identified type e.g. Candidate Outreach — Cold",
+  "subjectLines": ["Subject option 1", "Subject option 2", "Subject option 3", "Subject option 4"],
+  "primaryDraft": { "subject": "...", "body": "..." },
+  "shorter": { "subject": "...", "body": "..." },
+  "warmer": { "subject": "...", "body": "..." },
+  "direct": { "subject": "...", "body": "..." },
+  "followUp": { "subject": "...", "body": "..." },
+  "linkedinText": { "body": "3-6 sentences, no salutation, conversational register" },
+  "finalDraft": { "subject": "...", "body": "..." },
+  "keyPoints": ["key point included 1", "key point 2", "key point 3", "key point 4"],
+  "possibleRisks": ["risk or concern to check before sending 1", "risk 2", "risk 3"]
+}
+
+Variant guidelines:
+- primaryDraft: Standard professional version, clear structure
+- shorter: 30-40% shorter, all key points still present
+- warmer: More empathetic and personal, emphasizes the relationship, still professional
+- direct: Gets to the point immediately — executive-appropriate brevity
+- followUp: Reframed as a polite follow-up if no response, or natural next-step follow-up
+- linkedinText: Short, conversational, suitable for LinkedIn DM or SMS — no formal salutation
+- finalDraft: The single best, most polished version — this is the one the consultant should send
+
+Common message type guidance:
+- Candidate outreach: Introduce the role without overselling, make it easy to respond, do not reveal client unless appropriate
+- Candidate follow-up after call: Thank for time, confirm next steps, keep it brief
+- Candidate rejection: Be kind and direct, preserve the relationship, avoid unnecessary detail
+- Client update: Focus on progress, market feedback, pipeline quality, next steps — make consultant look organized
+- Weekly search update: Work completed, market feedback, pipeline status, challenges, next steps
+- Compensation clarification: Professional and direct, avoid promises, use careful wording
+- Slow process update: Honest without blaming the client, keep candidate interested, no overpromising
+- Internal update: Short, direct, action-focused
+
+keyPoints should list the specific information included in the messages.
+possibleRisks should list anything the consultant should verify before sending: missing facts, sensitive wording, unconfirmed details, overpromising, tone concerns, confidentiality issues.`;
+
+async function generateMessage() {
+  const msgType = document.getElementById('msg-type').value;
+  const recipient = document.getElementById('recipient').value;
+  const tone = document.getElementById('tone').value;
+  const context = document.getElementById('context').value.trim();
+
+  hideErr('draft-error');
+  if (!msgType) { showErr('draft-error', 'Please select a message type.'); return; }
+  if (!context) { showErr('draft-error', 'Please add context — even a few sentences significantly improves output quality.'); return; }
+
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('draft-empty').style.display = 'none';
+  document.getElementById('draft-results').style.display = 'none';
+  document.getElementById('draft-loading').style.display = 'flex';
+
+  const userPrompt = `Message Type: ${msgType}
+Recipient Type: ${recipient}
+Tone Preference: ${tone}
+Context: ${context}
+
+Generate all variants, subject lines, key points, and risks.`;
+
+  try {
+    if (typeof window.cowork === 'undefined' || !window.cowork.askClaude) {
+      throw new Error('Cowork environment required to run this tool.');
+    }
+    const raw = await window.cowork.askClaude(SYS_MSG + '\n\n' + userPrompt, []);
+    const cleaned = extractText(raw).replace(/^```json\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+    draftMsgs = JSON.parse(cleaned);
+
+    document.getElementById('draft-loading').style.display = 'none';
+    document.getElementById('draft-results').style.display = 'flex';
+
+    // Set badges
+    document.getElementById('result-type-badge').textContent = (draftMsgs.messageType || msgType).toUpperCase();
+    document.getElementById('result-recipient-badge').textContent = recipient.toUpperCase();
+
+    // Reset tabs to Send-Ready
+    document.querySelectorAll('#draft-results .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-tab="finalDraft"]').classList.add('active');
+    activeDraftTab = 'finalDraft';
+    document.getElementById('message-card').style.display = 'block';
+    document.getElementById('analysis-panel').style.display = 'none';
+
+    // Render subject picker
+    renderSubjectPicker(draftMsgs.subjectLines);
+
+    renderDraftMsg('finalDraft');
+    renderDraftAnalysis();
+
+  } catch (e) {
+    document.getElementById('draft-loading').style.display = 'none';
+    document.getElementById('draft-empty').style.display = 'flex';
+    showErr('draft-error', 'Generation failed: ' + e.message);
+  } finally {
+    document.getElementById('gen-btn').disabled = false;
+  }
+}
+
+// ── SEARCH PROGRESS ────────────────────────────────────────────────────────
+const SYS_PROG = `You are a senior executive search advisor at Carter Baldwin Executive Search. Analyze the search progress against the 49-day benchmark and produce a comprehensive assessment.
+
+49-Day Framework:
+- Days 1–7: Kickoff & Position Profiling
+- Days 8–14: Research & Target Identification
+- Days 15–21: Initial Outreach
+- Days 22–28: Screening & Assessment
+- Days 29–35: Shortlist Development
+- Days 36–42: Client Interviews
+- Days 43–49: Offer & Close
+
+Loxo Pipeline Benchmarks: Targets 80-150, Prospects 40-80, Engaged 15-30, Evaluating 8-15, Candidates 5-10, Semi-Finalists 3-6, Finalists 2-4.
+
+Return ONLY valid JSON:
+{
+  "assessment": { "summary": "2-3 sentence overall health assessment", "health": "On Track|At Risk|Off Track|Extended", "daysElapsed": number, "currentPhase": "..." },
+  "milestones": [{ "name": "...", "status": "complete|in-progress|pending|overdue", "note": "..." }],
+  "pipelineHealth": { "summary": "...", "stages": [{ "stage": "Targets", "count": 0, "benchmark": "80-150", "health": "good|warning|critical", "note": "..." }] },
+  "sevenDayPlan": [{ "timeframe": "Days 1-2", "action": "...", "owner": "Lead Consultant|Search Team|Client", "priority": "high|medium|low" }],
+  "clientEmail": { "subject": "...", "body": "full ready-to-send email" },
+  "internalUpdate": "2-3 paragraph direct internal update",
+  "strategyRecommendations": ["recommendation 1", "recommendation 2", "recommendation 3", "recommendation 4"]
+}`;
+
+async function analyzeSearch() {
+  const client = document.getElementById('p-client').value.trim();
+  const role = document.getElementById('p-role').value.trim();
+  const kickoff = document.getElementById('p-kickoff').value;
+  const today = document.getElementById('p-today').value;
+  const consultant = document.getElementById('p-consultant').value.trim();
+  const meeting = document.getElementById('p-meeting').value;
+  const stage = document.getElementById('p-stage').value;
+  const context = document.getElementById('p-context').value.trim();
+
+  const loxo = {
+    targets: parseInt(document.getElementById('lx-targets').value) || 0,
+    prospects: parseInt(document.getElementById('lx-prospects').value) || 0,
+    engaged: parseInt(document.getElementById('lx-engaged').value) || 0,
+    evaluating: parseInt(document.getElementById('lx-evaluating').value) || 0,
+    candidates: parseInt(document.getElementById('lx-candidates').value) || 0,
+    semifinalists: parseInt(document.getElementById('lx-semifinalists').value) || 0,
+    finalists: parseInt(document.getElementById('lx-finalists').value) || 0,
+    declined: parseInt(document.getElementById('lx-declined').value) || 0,
+  };
+
+  hideErr('prog-error');
+  if (!client || !role) { showErr('prog-error', 'Please enter a client name and role title.'); return; }
+
+  let daysElapsed = 0;
+  if (kickoff && today) {
+    daysElapsed = Math.max(0, Math.round((new Date(today) - new Date(kickoff)) / 86400000));
+  }
+
+  const fileContext = uploadedFiles.length
+    ? '\n\nAttached Documents:\n' + uploadedFiles.map(f => `--- ${f.name} ---\n${f.text.slice(0, 2000)}`).join('\n\n')
+    : '';
+
+  const userPrompt = `Analysis Focus: ${activeFocus}
+
+Search Details:
+- Client: ${client}
+- Role: ${role}
+- Lead Consultant: ${consultant || 'Not specified'}
+- Kickoff Date: ${kickoff || 'Not specified'}
+- Today's Date: ${today || 'Not specified'}
+- Days Elapsed: ${daysElapsed}
+- Current Stage: ${stage || 'Not specified'}
+- Next Client Meeting: ${meeting || 'Not scheduled'}
+
+Loxo Pipeline:
+- Targets: ${loxo.targets} | Prospects: ${loxo.prospects}
+- Engaged: ${loxo.engaged} | Evaluating: ${loxo.evaluating}
+- Candidates: ${loxo.candidates} | Semi-Finalists: ${loxo.semifinalists}
+- Finalists: ${loxo.finalists} | Declined: ${loxo.declined}
+
+${context ? 'Context & Notes:\n' + context : ''}${fileContext}`;
+
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('prog-empty').style.display = 'none';
+  document.getElementById('prog-results').style.display = 'none';
+  document.getElementById('prog-loading').style.display = 'flex';
+
+  try {
+    if (typeof window.cowork === 'undefined' || !window.cowork.askClaude) throw new Error('Cowork environment required.');
+    const raw = await window.cowork.askClaude(SYS_PROG + '\n\n' + userPrompt, []);
+    const cleaned = extractText(raw).replace(/^```json\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+    const result = JSON.parse(cleaned);
+
+    document.getElementById('prog-loading').style.display = 'none';
+    renderProgressResults(result, client, role);
+    document.getElementById('prog-results').style.display = 'flex';
+
+  } catch (e) {
+    document.getElementById('prog-loading').style.display = 'none';
+    document.getElementById('prog-empty').style.display = 'block';
+    showErr('prog-error', 'Analysis failed: ' + e.message);
+  } finally {
+    document.getElementById('analyze-btn').disabled = false;
+  }
+}
+
+function renderProgressResults(r, client, role) {
+  const wrap = document.getElementById('prog-results');
+  wrap.innerHTML = '';
+
+  const healthColors = { 'On Track':'#15803D','At Risk':'#B45309','Off Track':'#DC2626','Extended':'#7C3AED' };
+  const healthBgs   = { 'On Track':'#DCFCE7','At Risk':'#FEF3C7','Off Track':'#FEF2F2','Extended':'#EDE9FE' };
+  const health = r.assessment?.health || 'On Track';
+
+  wrap.innerHTML += `
+    <div class="pcard">
+      <div class="pcard-header">
+        <span class="pcard-title">Search Assessment — ${escHtml(client)}: ${escHtml(role)}</span>
+        <span style="font-size:11px;font-weight:700;color:${healthColors[health]||'#15803D'};background:${healthBgs[health]||'#DCFCE7'};padding:3px 10px;border-radius:12px;">${health}</span>
+      </div>
+      <div class="pcard-body">
+        <p>${escHtml(r.assessment?.summary || '')}</p>
+        <p style="margin-top:8px;font-size:12px;color:#AAA;">Day ${r.assessment?.daysElapsed ?? '?'} · ${escHtml(r.assessment?.currentPhase || '')}</p>
+      </div>
+    </div>`;
+
+  if (r.milestones?.length) {
+    const msHtml = r.milestones.map(m => {
+      const dc = {complete:'ms-complete','in-progress':'ms-progress',pending:'ms-pending',overdue:'ms-overdue'}[m.status]||'ms-pending';
+      const sc = {complete:'complete','in-progress':'progress',pending:'pending',overdue:'overdue'}[m.status]||'pending';
+      const sl = {complete:'Complete','in-progress':'In Progress',pending:'Pending',overdue:'Overdue'}[m.status]||m.status;
+      return `<div class="milestone-item">
+        <div class="ms-dot ${dc}"></div>
+        <span class="ms-name">${escHtml(m.name)}${m.note?'<span style="color:#AAA;font-size:11px;"> — '+escHtml(m.note)+'</span>':''}</span>
+        <span class="ms-status ${sc}">${sl}</span>
+      </div>`;
+    }).join('');
+    wrap.innerHTML += `<div class="pcard"><div class="pcard-header"><span class="pcard-title">49-Day Milestone Status</span></div><div class="pcard-body"><div class="milestone-list">${msHtml}</div></div></div>`;
+  }
+
+  if (r.pipelineHealth) {
+    const maxCount = Math.max(...(r.pipelineHealth.stages||[]).map(s=>s.count||0),1);
+    const bc = {good:'#15803D',warning:'#B45309',critical:'#DC2626'};
+    const stagesHtml = (r.pipelineHealth.stages||[]).map(s=>`
+      <div class="stage-row">
+        <div class="stage-meta"><span class="stage-name">${escHtml(s.stage)}</span><span class="stage-count">${s.count} <span style="color:#CCC">/ ${s.benchmark}</span></span></div>
+        <div class="stage-bar-bg"><div class="stage-bar-fill" style="width:${Math.round(((s.count||0)/maxCount)*100)}%;background:${bc[s.health]||'#E85D2A'};"></div></div>
+        ${s.note?'<div class="stage-note">'+escHtml(s.note)+'</div>':''}
+      </div>`).join('');
+    wrap.innerHTML += `<div class="pcard"><div class="pcard-header"><span class="pcard-title">Loxo Pipeline Health</span></div><div class="pcard-body"><p style="margin-bottom:16px;">${escHtml(r.pipelineHealth.summary||'')}</p><div class="pipeline-stages">${stagesHtml}</div></div></div>`;
+  }
+
+  if (r.sevenDayPlan?.length) {
+    const pc = {high:'priority-high',medium:'priority-medium',low:'priority-low'};
+    const planHtml = r.sevenDayPlan.map(d=>`
+      <div class="plan-day">
+        <span class="plan-day-badge ${pc[d.priority]||'priority-medium'}">${escHtml(d.timeframe||'')}</span>
+        <div class="plan-day-content">
+          <div class="plan-day-action">${escHtml(d.action)}</div>
+          ${d.owner?'<div class="plan-day-owner">Owner: '+escHtml(d.owner)+'</div>':''}
+        </div>
+      </div>`).join('');
+    wrap.innerHTML += `<div class="pcard"><div class="pcard-header"><span class="pcard-title">7-Day Action Plan</span></div><div class="pcard-body"><div class="plan-days">${planHtml}</div></div></div>`;
+  }
+
+  if (r.clientEmail) {
+    const eid = 'copy-client-email';
+    wrap.innerHTML += `
+      <div class="pcard">
+        <div class="pcard-header"><span class="pcard-title">Client Update Email — Ready to Send</span><button class="copy-btn" id="${eid}" onclick="copyText('${eid}',${JSON.stringify('Subject: '+(r.clientEmail.subject||'')+'\n\n'+(r.clientEmail.body||''))})">COPY</button></div>
+        <div class="email-subject">SUBJECT — <strong>${escHtml(r.clientEmail.subject||'')}</strong></div>
+        <div class="email-body-text">${escHtml(r.clientEmail.body||'')}</div>
+      </div>`;
+  }
+
+  if (r.internalUpdate) {
+    const iid = 'copy-internal';
+    wrap.innerHTML += `
+      <div class="pcard">
+        <div class="pcard-header"><span class="pcard-title">Internal Team Update</span><button class="copy-btn" id="${iid}" onclick="copyText('${iid}',${JSON.stringify(r.internalUpdate)})">COPY</button></div>
+        <div class="pcard-body" style="border-left:3px solid #111;margin:0 18px;padding:16px 0 16px 16px;"><p style="white-space:pre-wrap;">${escHtml(r.internalUpdate)}</p></div>
+      </div>`;
+  }
+
+  if (r.strategyRecommendations?.length) {
+    wrap.innerHTML += `<div class="pcard"><div class="pcard-header"><span class="pcard-title">Strategy &amp; Search Recommendations</span></div><div class="pcard-body"><ul class="alist">${r.strategyRecommendations.map(rec=>`<li>${escHtml(rec)}</li>`).join('')}</ul></div></div>`;
+  }
+}
+
+function copyText(btnId, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.textContent = 'COPIED'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>

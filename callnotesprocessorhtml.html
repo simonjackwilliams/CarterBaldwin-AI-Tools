@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call Notes Processor Pro</title>
+<style>
+:root{
+  --black:#0b0b0d;
+  --near-black:#141416;
+  --white:#ffffff;
+  --red:#F4512A;
+  --red-dark:#d8431f;
+  --red-light:#fde9e3;
+  --bg:#f2f2f4;
+  --card:#ffffff;
+  --border:#e2e2e6;
+  --border-soft:#ececef;
+  --charcoal:#26262b;
+  --gray-text:#6c6c74;
+  --gray-text-light:#94949c;
+  --shadow:0 1px 2px rgba(15,15,20,0.04),0 2px 8px rgba(15,15,20,0.06);
+  --radius:10px;
+  --radius-sm:7px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--charcoal);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--red);text-decoration:none;}
+
+/* ---------- Top Nav ---------- */
+.topnav{
+  background:var(--black);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 24px;
+  height:56px;
+}
+.nav-left{display:flex;align-items:center;gap:14px;}
+.nav-icon{
+  width:28px;height:28px;border-radius:7px;
+  background:var(--red);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.nav-icon svg{width:16px;height:16px;}
+.nav-title{
+  color:var(--white);
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:0.1px;
+  white-space:nowrap;
+}
+.nav-title .pro{color:var(--red);font-weight:700;}
+.nav-divider{width:1px;height:22px;background:rgba(255,255,255,0.15);margin:0 6px;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{
+  background:transparent;border:none;color:rgba(255,255,255,0.62);
+  font-size:13px;font-weight:500;padding:8px 14px;border-radius:6px;
+  cursor:pointer;transition:background 0.15s,color 0.15s;
+}
+.nav-tab:hover{background:rgba(255,255,255,0.06);color:var(--white);}
+.nav-tab.active{background:rgba(255,255,255,0.1);color:var(--white);}
+.nav-right{color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:1.2px;font-weight:600;white-space:nowrap;}
+.accent-line{height:3px;background:var(--red);}
+
+/* ---------- Layout ---------- */
+.app-body{padding:24px;max-width:1440px;margin:0 auto;}
+.view{display:none;}
+.view.active{display:block;}
+.two-col{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start;}
+@media (max-width:980px){.two-col{grid-template-columns:1fr;}}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:20px;
+  margin-bottom:16px;
+}
+.card-title{
+  font-size:15px;font-weight:700;color:var(--black);
+  margin:0 0 16px 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sticky-col{position:sticky;top:16px;}
+
+label.field-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:0.6px;
+  color:var(--gray-text);margin-bottom:6px;text-transform:uppercase;
+}
+.field{margin-bottom:14px;}
+.field .req{color:var(--red);}
+input[type=text],input[type=date],select,textarea{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:9px 11px;
+  font-size:13.5px;
+  color:var(--charcoal);
+  background:var(--white);
+  font-family:inherit;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(244,81,42,0.12);
+}
+textarea{resize:vertical;min-height:70px;}
+textarea#notesInput{min-height:220px;}
+.hint{font-size:11.5px;color:var(--gray-text-light);margin-top:6px;}
+.two-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.btn{
+  border:none;border-radius:var(--radius-sm);
+  font-size:13.5px;font-weight:600;
+  padding:10px 16px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:filter 0.12s, opacity 0.12s, transform 0.05s;
+  font-family:inherit;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--red);color:var(--white);width:100%;padding:13px 16px;font-size:14px;}
+.btn-primary:hover:not(:disabled){background:var(--red-dark);}
+.btn-primary:disabled{background:#e8b6a6;cursor:not-allowed;}
+.btn-secondary{background:var(--white);color:var(--charcoal);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:#c8c8ce;background:#fafafb;}
+.btn-dark{background:var(--black);color:var(--white);}
+.btn-dark:hover{background:#000;}
+.btn-text{background:transparent;color:var(--red);padding:6px 8px;font-size:12.5px;}
+.btn-text:hover{text-decoration:underline;}
+.btn-danger{background:var(--white);color:#b3261e;border:1px solid #f0c9c4;}
+.btn-danger:hover{background:#fdf3f1;}
+.btn-sm{padding:6px 10px;font-size:12px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+.starting-points-title{
+  font-size:11px;font-weight:700;letter-spacing:0.8px;color:var(--gray-text);
+  margin:18px 0 10px 0;text-transform:uppercase;
+}
+.example-card{
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:12px 13px;margin-bottom:10px;cursor:pointer;background:var(--white);
+  transition:border-color 0.15s, background 0.15s;
+}
+.example-card:hover{border-color:var(--red);background:#fff8f6;}
+.example-card .ex-label{
+  font-size:10.5px;font-weight:700;letter-spacing:0.6px;color:var(--red);
+  text-transform:uppercase;margin-bottom:4px;
+}
+.example-card .ex-desc{font-size:12.5px;color:var(--charcoal);line-height:1.4;}
+
+.attach-box{
+  border:1px dashed var(--border);border-radius:var(--radius-sm);
+  padding:14px;text-align:center;background:#fafafb;cursor:pointer;
+}
+.attach-box:hover{border-color:var(--red);}
+.attach-box input{display:none;}
+.attach-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.attach-item{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12.5px;border:1px solid var(--border-soft);border-radius:6px;
+  padding:7px 10px;background:var(--white);
+}
+.attach-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
+.status-pill{
+  font-size:10px;font-weight:700;letter-spacing:0.3px;padding:2px 8px;border-radius:20px;
+  text-transform:uppercase;white-space:nowrap;
+}
+.status-parsed{background:#e6f4ea;color:#1e7a37;}
+.status-partial{background:#fff3d6;color:#8a6100;}
+.status-unavailable{background:#eee;color:#666;}
+.status-unsupported{background:#fdeceb;color:#a02b1f;}
+.attach-remove{background:none;border:none;color:var(--gray-text-light);cursor:pointer;font-size:14px;margin-left:8px;}
+
+/* ---------- Right output panel ---------- */
+.output-empty{
+  min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;color:var(--gray-text);padding:60px 30px;
+}
+.output-empty .icon-circle{
+  width:56px;height:56px;border-radius:50%;background:var(--red-light);
+  display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+}
+.output-empty h3{color:var(--black);font-size:16px;margin:0 0 8px 0;}
+.output-empty p{font-size:13px;max-width:340px;margin:0;}
+
+.processing-state{
+  min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
+.spinner{
+  width:34px;height:34px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--red);
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.processing-state .p-text{color:var(--gray-text);font-size:13.5px;font-weight:500;}
+
+.section-block{
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:16px 18px;margin-bottom:14px;background:var(--white);
+}
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+.section-head h4{
+  font-size:12.5px;font-weight:700;letter-spacing:0.6px;color:var(--black);
+  text-transform:uppercase;margin:0;display:flex;align-items:center;gap:8px;
+}
+.section-head h4 .bar{width:4px;height:14px;background:var(--red);border-radius:2px;display:inline-block;}
+.edited-badge{
+  font-size:9.5px;font-weight:700;letter-spacing:0.4px;color:var(--red);
+  border:1px solid var(--red-light);background:var(--red-light);border-radius:12px;
+  padding:2px 8px;text-transform:uppercase;
+}
+.subtle{color:var(--gray-text);font-size:12.5px;}
+.value-row{display:flex;gap:8px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;}
+.value-row .k{font-weight:600;color:var(--black);min-width:150px;}
+.value-row .v{color:var(--charcoal);flex:1;}
+.na{color:var(--gray-text-light);font-style:italic;}
+
+.tag{
+  display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:0.3px;
+  padding:3px 9px;border-radius:20px;text-transform:uppercase;margin-right:6px;
+}
+.tag-strong{background:#fdeceb;color:#a02b1f;}
+.tag-moderate{background:#fff3d6;color:#8a6100;}
+.tag-limited{background:#eef1f5;color:#4a5568;}
+.tag-none{background:#eee;color:#888;}
+.tag-high{background:#fdeceb;color:#a02b1f;}
+.tag-low{background:#e6f4ea;color:#1e7a37;}
+.tag-neutral{background:#eef1f5;color:#4a5568;}
+
+.mini-card{border:1px solid var(--border-soft);border-radius:8px;padding:11px 13px;margin-bottom:9px;background:#fbfbfc;}
+.mini-card .mc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;}
+.mini-card .mc-title{font-weight:600;font-size:13px;color:var(--black);}
+.mini-card .mc-evidence{font-size:12.5px;color:var(--gray-text);font-style:italic;}
+
+.factor-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:760px){.factor-cols{grid-template-columns:1fr;}}
+.factor-col-title{font-size:11px;font-weight:700;color:var(--gray-text);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;}
+
+.fact-block{border-left:3px solid var(--border);padding:4px 0 4px 12px;margin-bottom:10px;}
+.fact-block.fact{border-left-color:#3b7d47;}
+.fact-block.interp{border-left-color:#c98a10;}
+.fact-block.gap{border-left-color:var(--red);}
+.fact-label{font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray-text-light);margin-bottom:2px;}
+.fact-block.fact .fact-label{color:#3b7d47;}
+.fact-block.interp .fact-label{color:#c98a10;}
+.fact-block.gap .fact-label{color:var(--red);}
+
+.gap-item{border:1px solid var(--border-soft);border-left:3px solid var(--red);border-radius:8px;padding:11px 13px;margin-bottom:9px;background:#fffaf9;}
+.gap-item .gap-title{font-weight:700;font-size:13px;color:var(--black);margin-bottom:5px;}
+.gap-item .gap-line{font-size:12.5px;margin-bottom:3px;}
+.gap-item .gap-line b{color:var(--charcoal);}
+
+.qa-list{margin:0;padding-left:0;list-style:none;}
+.qa-list li{
+  padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:13px;
+  display:flex;gap:10px;
+}
+.qa-list li:last-child{border-bottom:none;}
+.qa-num{color:var(--red);font-weight:700;flex-shrink:0;}
+
+.coverage-wrap{display:flex;align-items:center;gap:16px;margin-bottom:14px;}
+.coverage-pct{font-size:30px;font-weight:800;color:var(--black);}
+.coverage-bar-outer{flex:1;height:8px;border-radius:5px;background:var(--border-soft);overflow:hidden;}
+.coverage-bar-inner{height:100%;background:var(--red);border-radius:5px;transition:width 0.4s;}
+.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media (max-width:760px){.coverage-grid{grid-template-columns:1fr;}}
+.coverage-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--border-soft);border-radius:6px;font-size:12.5px;}
+.cov-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px;}
+.cov-covered{background:#1e7a37;}
+.cov-partial{background:#c98a10;}
+.cov-none{background:#c7c7cc;}
+
+.takeaway-box{
+  background:var(--near-black);color:var(--white);border-radius:var(--radius);
+  padding:20px 22px;margin-bottom:16px;
+}
+.takeaway-box h4{color:var(--red);font-size:12px;letter-spacing:0.6px;text-transform:uppercase;margin:0 0 10px 0;}
+.takeaway-box p{margin:0;font-size:13.5px;line-height:1.65;color:#f1f1f2;}
+
+textarea.edit-area{width:100%;min-height:110px;font-family:inherit;font-size:13px;}
+.edit-actions{display:flex;gap:8px;margin-top:8px;}
+
+.loxo-box{
+  background:#fbfbfc;border:1px solid var(--border);border-left:3px solid var(--black);
+  border-radius:8px;padding:14px 16px;
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  font-size:12.5px;line-height:1.6;white-space:pre-wrap;color:var(--charcoal);
+  max-height:420px;overflow-y:auto;
+}
+.loxo-subtitle{font-size:12px;color:var(--gray-text);margin:-6px 0 10px 0;}
+
+/* ---------- Summary View ---------- */
+.summary-header{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 26px;margin-bottom:16px;
+}
+.summary-header .cand-name{font-size:22px;font-weight:800;color:var(--black);margin:0 0 4px 0;}
+.summary-header .cand-role{font-size:14px;color:var(--gray-text);margin-bottom:14px;}
+.summary-meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;border-top:1px solid var(--border-soft);padding-top:14px;}
+@media (max-width:800px){.summary-meta-grid{grid-template-columns:repeat(2,1fr);}}
+.summary-meta-grid .sm-label{font-size:10px;font-weight:700;letter-spacing:0.5px;color:var(--gray-text-light);text-transform:uppercase;margin-bottom:3px;}
+.summary-meta-grid .sm-value{font-size:13px;font-weight:600;color:var(--charcoal);}
+
+.summary-toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.summary-body .section-block{margin-bottom:12px;}
+
+/* ---------- Saved Calls ---------- */
+.saved-table{width:100%;border-collapse:collapse;}
+.saved-table th{
+  text-align:left;font-size:10.5px;letter-spacing:0.5px;text-transform:uppercase;
+  color:var(--gray-text-light);padding:9px 10px;border-bottom:1px solid var(--border);
+}
+.saved-table td{padding:11px 10px;border-bottom:1px solid var(--border-soft);font-size:13px;vertical-align:middle;}
+.saved-table tr:hover td{background:#fafafb;}
+.saved-empty{padding:60px 20px;text-align:center;color:var(--gray-text);}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,10,12,0.5);display:none;
+  align-items:center;justify-content:center;z-index:1000;
+}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  background:var(--white);border-radius:var(--radius);padding:24px;max-width:420px;width:90%;
+  box-shadow:0 10px 40px rgba(0,0,0,0.25);
+}
+.modal-box h3{margin:0 0 10px 0;font-size:16px;color:var(--black);}
+.modal-box p{margin:0 0 18px 0;font-size:13.5px;color:var(--gray-text);line-height:1.5;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--black);color:var(--white);
+  padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,0.25);
+  opacity:0;transform:translateY(10px);transition:opacity 0.2s, transform 0.2s;z-index:1200;pointer-events:none;
+  border-left:3px solid var(--red);
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+.empty-note{color:var(--gray-text-light);font-size:12.5px;font-style:italic;}
+
+/* ---------- Print ---------- */
+@media print{
+  .topnav,.accent-line,.no-print,.summary-toolbar,.btn,.edit-actions{display:none !important;}
+  body{background:#fff;}
+  .app-body{padding:0;max-width:none;}
+  .card,.section-block,.summary-header{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .takeaway-box{background:#f2f2f2 !important;color:#111 !important;border:1px solid #ccc;}
+  .takeaway-box h4{color:#a02b1f !important;}
+  .view{display:none !important;}
+  #summaryView{display:block !important;}
+  .loxo-box{max-height:none !important;overflow:visible !important;border:1px solid #ccc;}
+}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="nav-left">
+    <div class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4H20V15L16 15L13 19V15H4V4Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="nav-title">Call Notes Processor <span class="pro">Pro</span></div>
+    <div class="nav-divider"></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="processView">Process Notes</button>
+      <button class="nav-tab" data-view="summaryView">Candidate Summary</button>
+      <button class="nav-tab" data-view="savedView">Saved Calls</button>
+    </div>
+  </div>
+  <div class="nav-right">EXECUTIVE SEARCH PLATFORM</div>
+</div>
+<div class="accent-line"></div>
+
+<div class="app-body">
+
+  <!-- ============ PROCESS NOTES VIEW ============ -->
+  <div class="view active" id="processView">
+    <div class="two-col">
+
+      <!-- LEFT INPUT -->
+      <div class="sticky-col">
+        <div class="card">
+          <div class="card-title">Process Call Notes</div>
+
+          <div class="two-grid">
+            <div class="field">
+              <label class="field-label">Candidate Name</label>
+              <input type="text" id="fCandidate" placeholder="Candidate name">
+            </div>
+            <div class="field">
+              <label class="field-label">Current Company</label>
+              <input type="text" id="fCompany" placeholder="Current organization">
+            </div>
+          </div>
+          <div class="two-grid">
+            <div class="field">
+              <label class="field-label">Current Title</label>
+              <input type="text" id="fTitle" placeholder="Current position">
+            </div>
+            <div class="field">
+              <label class="field-label">Search / Client</label>
+              <input type="text" id="fSearch" placeholder="Search name or client">
+            </div>
+          </div>
+          <div class="two-grid">
+            <div class="field">
+              <label class="field-label">Call Type</label>
+              <select id="fCallType">
+                <option value="">Select call type</option>
+                <option>Initial Candidate Call</option>
+                <option>Follow-Up Candidate Call</option>
+                <option>Candidate Interview Debrief</option>
+                <option>Pre-Client Interview Preparation</option>
+                <option>Post-Client Interview Debrief</option>
+                <option>Finalist / Closing Call</option>
+                <option>Reference Conversation</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Consultant</label>
+              <input type="text" id="fConsultant" placeholder="Consultant name">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Call Date</label>
+            <input type="date" id="fDate">
+          </div>
+
+          <div class="field">
+            <label class="field-label">Call Notes / Transcript <span class="req">*</span></label>
+            <textarea id="notesInput" placeholder="Paste raw call notes or a call transcript here.
+Notes do not need to be organized.
+Include information such as:
+• Current role and responsibilities
+• Career background
+• Reasons the candidate may consider a move
+• Compensation
+• Culture preferences
+• Location or relocation
+• Candidate concerns
+• Interest in the opportunity
+• Other active opportunities
+• Questions raised during the call"></textarea>
+            <div class="hint">More detail produces a stronger candidate summary.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Attach Supporting Information</label>
+            <div class="attach-box" id="attachBox">
+              <input type="file" id="fileInput" multiple>
+              <div style="font-size:12.5px;color:var(--gray-text);">Click to attach resume, LinkedIn export, biography, position spec, or prior notes</div>
+            </div>
+            <div class="attach-list" id="attachList"></div>
+          </div>
+
+          <button class="btn btn-primary" id="processBtn" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M13 6L19 12L13 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Process Call Notes
+          </button>
+
+          <div class="starting-points-title">Starting Points</div>
+          <div id="examplesList"></div>
+
+          <div style="border-top:1px solid var(--border-soft);margin-top:14px;padding-top:14px;">
+            <button class="btn btn-secondary" style="width:100%;" id="loadDemoBtn">Load Demo Call</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT OUTPUT -->
+      <div>
+        <div class="card" id="outputCard" style="min-height:460px;">
+          <div class="output-empty" id="outputEmpty">
+            <div class="icon-circle">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 4H20V15L16 15L13 19V15H4V4Z" stroke="#F4512A" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Your candidate analysis will appear here</h3>
+            <p>Complete the form and click <b>Process Call Notes</b> to generate structured executive search intelligence from this conversation.</p>
+          </div>
+          <div class="processing-state" id="processingState" style="display:none;">
+            <div class="spinner"></div>
+            <div class="p-text">Processing call intelligence...</div>
+          </div>
+          <div id="analysisOutput" style="display:none;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ CANDIDATE SUMMARY VIEW ============ -->
+  <div class="view" id="summaryView">
+    <div id="summaryContent"></div>
+  </div>
+
+  <!-- ============ SAVED CALLS VIEW ============ -->
+  <div class="view" id="savedView">
+    <div class="card">
+      <div class="card-title">
+        Saved Calls
+        <div class="btn-row no-print">
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+            Import Call Data
+            <input type="file" id="importInput" accept="application/json" style="display:none;">
+          </label>
+        </div>
+      </div>
+      <div id="savedCallsWrap"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3 id="modalTitle">Confirm</h3>
+    <p id="modalBody"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalConfirm" style="width:auto;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   UTILITIES
+   ========================================================================= */
+function esc(s){
+  if(s===null||s===undefined) return "";
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function safeText(v, fallback){
+  if(v===null || v===undefined) return fallback;
+  if(typeof v==="number" && isNaN(v)) return fallback;
+  if(typeof v==="string" && v.trim()==="") return fallback;
+  return v;
+}
+function fmtMoney(n){
+  if(n===null||n===undefined||isNaN(n)) return null;
+  return "$" + Math.round(n).toLocaleString("en-US");
+}
+function uid(){ return "c_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); }
+function esc_regex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+
+var ONES = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,
+  eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+var TENS = {twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+
+function wordsToNumber(str){
+  if(!str) return null;
+  str = String(str).toLowerCase().trim();
+  if(/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+  var parts = str.split(/[\s-]+/);
+  var total = 0, found = false;
+  for(var i=0;i<parts.length;i++){
+    var p = parts[i];
+    if(ONES.hasOwnProperty(p)){ total += ONES[p]; found = true; }
+    else if(TENS.hasOwnProperty(p)){ total += TENS[p]; found = true; }
+  }
+  return found ? total : null;
+}
+var NUM_WORD_ALT = Object.keys(ONES).concat(Object.keys(TENS)).join("|");
+
+function splitSentences(text){
+  if(!text) return [];
+  // split on sentence punctuation and newlines/semicolons, keep reasonably intact clauses
+  var raw = text
+    .replace(/\r\n/g,"\n")
+    .split(/(?<=[.!?])\s+|\n+|;\s*/g);
+  return raw.map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+}
+
+function anySentenceMatch(sentences, re){
+  for(var i=0;i<sentences.length;i++){ if(re.test(sentences[i])) return sentences[i]; }
+  return null;
+}
+function allSentenceMatches(sentences, re){
+  var out=[];
+  for(var i=0;i<sentences.length;i++){ if(re.test(sentences[i])) out.push(sentences[i]); }
+  return out;
+}
+
+/* =========================================================================
+   DEMO / STARTING POINT CONTENT
+   ========================================================================= */
+var DEMO_CALL = {
+  meta:{
+    candidateName:"Daniel Mercer",
+    company:"Northstar Industrial Systems",
+    title:"SVP, Finance",
+    search:"Chief Financial Officer — Summit Components",
+    callType:"Initial Candidate Call",
+    consultant:"Simon",
+    callDate:new Date().toISOString().slice(0,10)
+  },
+  notes:"Daniel has been with Northstar Industrial Systems for about six years. He started in a corporate finance role and progressed through two promotions into his current SVP of Finance position, where he has significant FP&A and strategic finance responsibility. He reports directly to the CFO and leads a team of approximately 12 people across FP&A and business unit finance. Daniel said he is not actively searching but has been thinking more about long-term advancement. He mentioned he has not been promoted in the last four years and feels his path to a CFO seat at Northstar may be limited because the current CFO is relatively young and not likely to move soon. Current compensation is a $275,000 base salary with a target bonus of approximately 40 percent, plus some equity, though he was not specific about the equity amount. He did not raise any compensation dissatisfaction and said his pay is competitive for the market. Daniel is based in Atlanta; his wife also works in Atlanta. He said he would need to talk it through with her before seriously considering Dallas, and that relocation is not something he can decide alone. He was clear that he is not rejecting Dallas outright. Daniel said culture is very important to him and that he has little patience for organizations that are highly political; he described his current environment as generally collaborative but said he has seen politics increase as the company has grown. He asked several detailed questions about why the CFO role at Summit Components is open, whether it is a replacement or a newly created position, and asked about the CEO's background and tenure. His answers throughout the call were direct and specific, and he gave concrete examples when describing his FP&A responsibilities. Daniel mentioned that another recruiter reached out to him last week about a different opportunity but said he has not had a substantive conversation with them yet. He said he would be open to a further conversation about the Summit Components role and seemed moderately engaged, though he repeated that he is not actively looking and is not in a rush.",
+  attachments:[]
+};
+
+var EXAMPLES = [
+  {
+    key:"initial",
+    label:"Initial Candidate Call",
+    desc:"Senior finance executive discussing career progression, compensation, and openness to a new CFO opportunity.",
+    meta:{candidateName:"Michael Torres",company:"Ashford Grove Holdings",title:"VP, Finance",search:"Chief Financial Officer — Riverton Group",callType:"Initial Candidate Call",consultant:"",callDate:new Date().toISOString().slice(0,10)},
+    notes:"Michael has been at Ashford Grove Holdings for seven years, starting as a finance manager and moving up to VP of Finance about two years ago. He reports to the CFO and has a team of 8. He mentioned he has not had a promotion since becoming VP and feels somewhat stuck, saying the organization is fairly flat above him. He is not actively looking but said he is open to hearing more given the CFO title is appealing. Base salary is $240,000 with a 35% target bonus; he did not mention equity. He said compensation would need to move meaningfully higher for him to seriously consider leaving, though he did not give a specific number. He values a collaborative, low politics environment and said his current company is fairly bureaucratic and slow to make decisions. He is based in Chicago and said the Riverton role is also in Chicago so relocation is not a factor. He asked about the reporting structure for the CFO role and whether it reports to the CEO or to a Board. He seemed engaged and asked several follow-up questions, and gave specific examples of recent forecasting work he has led. He has not spoken with any other recruiters recently."
+  },
+  {
+    key:"passive",
+    label:"Passive Candidate",
+    desc:"Executive is successful in the current role but may be motivated by greater scope and leadership exposure.",
+    meta:{candidateName:"Rebecca Chen",company:"Meridian Health Partners",title:"VP, Operations",search:"Chief Operating Officer — Fairbridge Health",callType:"Initial Candidate Call",consultant:"",callDate:new Date().toISOString().slice(0,10)},
+    notes:"Rebecca said multiple times that she is very happy at Meridian Health Partners and is not looking for a new role. She has been there nine years and was promoted three times, most recently to VP of Operations two years ago, overseeing a single business unit with revenue of about $400M. She reports to the COO. She said her compensation is competitive and she has no complaints about pay. When asked what might interest her, she said she would only consider something with enterprise-wide scope, direct P&L ownership across multiple markets, and more exposure to the board, since her current role is limited to one division. She said she is not concerned about her current company's stability and described the culture as entrepreneurial and fast paced, which she likes. She said she is based in Denver and has not really thought about relocation because she has not been looking. She asked detailed questions about the scope of the COO role, how many business units it covers, and whether it has board exposure. Her answers were thoughtful and specific, and she gave detailed examples of operational turnarounds she has led. She has not been contacted by other recruiters and is not in any other process."
+  },
+  {
+    key:"relocation",
+    label:"Relocation Concern",
+    desc:"Strong candidate with interest in the role but unresolved family and geographic considerations.",
+    meta:{candidateName:"James Whitfield",company:"Caldwell Materials Group",title:"General Manager",search:"President — Delta Fabrication",callType:"Follow-Up Candidate Call",consultant:"",callDate:new Date().toISOString().slice(0,10)},
+    notes:"James has been General Manager at Caldwell Materials Group for four years and previously spent six years in plant management roles before that, so his career has moved steadily upward. He runs a facility with about 300 employees and reports to a Division President. He said he is genuinely excited about the President role at Delta Fabrication and has asked for next steps twice on this call. Compensation was discussed briefly; his current base is $310,000 with a 45% bonus and he said total compensation would need to be at least modestly higher but did not name an exact figure. He said the bigger issue is location. He is based in Pittsburgh and the Delta role is in Charlotte. He has two children in high school and said moving them before graduation would be very difficult; he would need to seriously discuss this with his wife and is not sure it is workable in the current school year. He did not say he is unwilling to relocate, only that timing and family circumstances make it complicated right now. He values a hands-on, high-accountability culture and said he dislikes excessive bureaucracy. He asked about the ownership structure of Delta Fabrication and whether it is private equity backed. He has not mentioned any other active search processes."
+  },
+  {
+    key:"finalist",
+    label:"Finalist / Closing Call",
+    desc:"Final-stage candidate discussing compensation, resignation timing, other opportunities, and counteroffer risk.",
+    meta:{candidateName:"Patricia Alvarez",company:"Brightstone Consumer Group",title:"Chief Marketing Officer",search:"Chief Marketing Officer — Halden Brands",callType:"Finalist / Closing Call",consultant:"",callDate:new Date().toISOString().slice(0,10)},
+    notes:"This is Patricia's final call before a decision. She has been CMO at Brightstone Consumer Group for five years and has a very strong relationship with the CEO there; she mentioned the CEO has told her she is on the shortlist for an eventual President role internally, though nothing is confirmed. She has significant unvested equity that finishes vesting in about 18 months. Current compensation is $410,000 base, 50% target bonus, and equity; she said the Halden offer would need to include a meaningful premium given what she would be walking away from. She is also currently in a late-stage process with another company, describing herself as in final rounds there as well. She said if Brightstone found out she was leaving, she believes they would likely come back with a counteroffer given how close she is with leadership, though she said money alone would not keep her. She wants to understand Halden's growth trajectory and asked pointed questions about the board's expectations for the role and why the position is open. Her answers were concise and direct throughout the call. She said she is prepared to resign within two weeks of accepting an offer but wants clarity on start date flexibility. She did not raise any concerns about culture or location since the role is remote-flexible."
+  }
+];
+
+/* =========================================================================
+   MOTIVATION ENGINE CONFIGURATION
+   ========================================================================= */
+var NEGATION_PATTERNS = [
+  /\bhappy (with|at|in)\b/i, /\bsatisfied (with|at|in)?\b/i, /\bcompetitive\b.{0,20}\bhappy\b/i,
+  /\bno complaints?\b/i, /\bnot a concern\b/i, /\bnot concerned\b/i, /\bnot an issue\b/i,
+  /\bcontent (with)?\b/i, /\bfine with\b/i, /\bnot looking to leave\b/i, /\bisn'?t a factor\b/i,
+  /\bnot rejecting\b/i, /\bnot ruling out\b/i, /\bno issues? with\b/i, /\bworks (well|fine)\b/i,
+  /\bnot a factor\b/i, /\bnot dissatisfied\b/i, /\bpleased with\b/i, /\bcomfortable with\b/i,
+  /\bno concerns?\b/i, /did not raise (any )?concerns?/i, /raised no concerns?/i, /\bnot a concern\b/i,
+  /\bnot an obstacle\b/i, /\bnot an objection\b/i
+];
+function isNegated(sentence){
+  for(var i=0;i<NEGATION_PATTERNS.length;i++){ if(NEGATION_PATTERNS[i].test(sentence)) return true; }
+  return false;
+}
+var INTENSITY_WORDS = /\b(very|significant(ly)?|major|really|strongly|clearly|repeatedly|frustrat\w*|hates?|capped|stuck|limited|increasingly|genuinely|seriously)\b/i;
+
+/* Some categories (compensation, location) use broad, purely factual keyword lists.
+   A bare factual mention (e.g. "275 base 40% bonus") is not evidence of motivation on its own —
+   require an accompanying valence/dissatisfaction/desire cue in the same sentence before counting it. */
+var VALENCE_GATE_RE = /underpaid|below market|not competitive|frustrat\w*|unhapp\w*|dissatisf\w*|\bcapped\b|\bstuck\b|stagnant|would need|need(s)? to (be|see|move|discuss|talk)|require\w* (more|higher|a premium|an increase)|difficult|complicated|hesitant|unsure|not sure|tired of|hate\w*|reluctant|concern\w*|worried|struggl\w*|(is|are) not enough|want\w* (more|to move|to relocate)/i;
+
+var MOTIVATION_CATEGORIES = [
+  {
+    key:"career_growth", theme:"Career Growth",
+    indicators:[/limited advancement/i,/\bcapped\b/i,/plateau/i,/next step/i,/promotion/i,/advancement/i,
+      /more responsibility/i,/greater scope/i,/career progression/i,/path to (the )?(cfo|ceo|coo|president|cto)/i,
+      /stuck/i,/not (been )?promoted/i]
+  },
+  {
+    key:"leadership_scope", theme:"Leadership Scope",
+    indicators:[/larger team/i,/broader role/i,/enterprise responsibility/i,/more influence/i,
+      /strategic exposure/i,/board exposure/i,/ceo exposure/i,/\bownership\b/i,/enterprise[- ]wide/i,/p&l ownership/i]
+  },
+  {
+    key:"leadership_change", theme:"Company or Leadership Change",
+    indicators:[/new ceo/i,/new cfo/i,/acquisition/i,/merger/i,/restructur\w*/i,/reorganiz\w*/i,
+      /leadership change/i,/succession/i,/retir\w*/i]
+  },
+  {
+    key:"culture", theme:"Culture",
+    indicators:[/\bculture\b/i,/politic\w*/i,/bureaucra\w*/i,/entrepreneurial/i,/collaborative/i,
+      /\bvalues\b/i,/autonomy/i,/decision.making/i]
+  },
+  {
+    key:"compensation", theme:"Compensation",
+    indicators:[/\bsalary\b/i,/\bbase\b/i,/\bbonus\b/i,/\bequity\b/i,/compensation/i,/underpaid/i,
+      /\bpackage\b/i,/long.term incentive/i,/\bLTI\b/i],
+    gate:VALENCE_GATE_RE
+  },
+  {
+    key:"location", theme:"Location / Lifestyle",
+    indicators:[/relocat\w*/i,/\bcommute\b/i,/\btravel\b/i,/\bremote\b/i,/\bhybrid\b/i,/\bfamily\b/i,
+      /\bspouse\b/i,/\bchildren\b/i,/\bmove\b/i,/\blocation\b/i],
+    gate:VALENCE_GATE_RE
+  },
+  {
+    key:"stability", theme:"Company Performance / Stability",
+    indicators:[/layoffs?/i,/declin\w*/i,/\bgrowth\b/i,/instability/i,/uncertainty/i,/bankrupt\w*/i,
+      /performance/i,/private equity/i,/acquisition/i]
+  },
+  {
+    key:"role_content", theme:"Role Content",
+    indicators:[/strategic/i,/operational/i,/transformation/i,/\bbuild\b/i,/turnaround/i,/\bgrowth\b/i,
+      /integration/i,/\bM&A\b/i]
+  }
+];
+
+/* =========================================================================
+   ANALYSIS ENGINE
+   ========================================================================= */
+function analyzeCall(meta, notesText, attachmentTexts){
+  var combinedText = notesText || "";
+  var attachNote = "";
+  if(attachmentTexts && attachmentTexts.length){
+    combinedText += "\n" + attachmentTexts.join("\n");
+    attachNote = "Analysis incorporated parsed text from " + attachmentTexts.length + " supporting attachment(s) in addition to call notes.";
+  }
+  var sentences = splitSentences(combinedText);
+  var lower = combinedText.toLowerCase();
+
+  var profile = analyzeProfile(combinedText, sentences);
+  var career = analyzeCareer(combinedText, sentences, profile);
+  var motivationResult = analyzeMotivations(sentences);
+  var pushPull = analyzePushPull(sentences, motivationResult);
+  var compensation = analyzeCompensation(combinedText, sentences);
+  var culture = analyzeCulture(sentences);
+  var location = analyzeLocation(combinedText, sentences);
+  var interest = analyzeInterest(sentences);
+  var marketActivity = analyzeMarketActivity(sentences);
+  var counteroffer = analyzeCounteroffer(sentences, profile);
+  var concerns = analyzeConcerns(sentences);
+  var questions = analyzeQuestions(sentences);
+  var communication = analyzeCommunication(sentences);
+  var timing = analyzeTiming(sentences);
+
+  var coverage = analyzeCoverage({
+    profile:profile, career:career, motivation:motivationResult, compensation:compensation,
+    culture:culture, location:location, interest:interest, marketActivity:marketActivity,
+    counteroffer:counteroffer, concerns:concerns, timing:timing
+  });
+
+  var gapsFollowUps = analyzeGaps({
+    motivation:motivationResult, compensation:compensation, location:location, culture:culture,
+    interest:interest, marketActivity:marketActivity, counteroffer:counteroffer, concerns:concerns,
+    timing:timing, career:career
+  });
+
+  var takeaway = buildTakeaway({
+    motivation:motivationResult, interest:interest, location:location, compensation:compensation,
+    marketActivity:marketActivity, counteroffer:counteroffer, gaps:gapsFollowUps.gaps
+  });
+
+  return {
+    meta:meta,
+    profile:profile, career:career, motivation:motivationResult, pushPull:pushPull,
+    compensation:compensation, culture:culture, location:location, interest:interest,
+    marketActivity:marketActivity, counteroffer:counteroffer, concerns:concerns,
+    questions:questions, communication:communication, timing:timing,
+    coverage:coverage, gaps:gapsFollowUps.gaps, followUps:gapsFollowUps.followUps,
+    takeaway:takeaway, attachNote:attachNote, generatedAt:new Date().toISOString()
+  };
+}
+
+/* ---- Candidate Profile ---- */
+function analyzeProfile(text, sentences){
+  var out = {tenureYears:null,roleYears:null,reportsTo:null,teamSize:null,businessSize:null,
+    revenueScope:null,geoScope:null,pAndL:false,boardExposure:false,execExposure:false,evidence:{}};
+
+  var m;
+  // team size
+  m = text.match(/(?:team of|leads(?: a team of)?|manages(?: a team of)?|oversees(?: a team of)?)\s+(?:approximately|about|roughly|around)?\s*(\d{1,4}|[a-z]+)/i);
+  if(!m) m = text.match(/(\d{1,4}|[a-z]+)\s+direct reports/i);
+  if(!m) m = text.match(/(\d{1,4}|[a-z]+)[- ]person team/i);
+  if(m){
+    var n = /^\d+$/.test(m[1]) ? parseInt(m[1],10) : wordsToNumber(m[1]);
+    if(n!==null && n>0 && n<20000){ out.teamSize = n; out.evidence.teamSize = m[0].trim(); }
+  }
+
+  // reports to
+  m = text.match(/reports?\s+(?:directly\s+)?(?:to\s+)?(?:the\s+)?(CEO|CFO|COO|CTO|CHRO|CIO|President|Board(?: of Directors)?|Chairman|General Manager|Division President|Managing Director)/i);
+  if(m){ out.reportsTo = m[1]; out.evidence.reportsTo = m[0].trim(); }
+
+  // years with company / role
+  var yearMatches = [];
+  var yre = /(\d{1,2}|[a-z]+)\s*(?:years?|yrs?\.?)\b/gi;
+  while((m = yre.exec(text)) !== null){
+    var val = /^\d+$/.test(m[1]) ? parseInt(m[1],10) : wordsToNumber(m[1]);
+    if(val!==null && val>=0 && val<60){
+      yearMatches.push({val:val, index:m.index, context:text.substr(Math.max(0,m.index-40), 90)});
+    }
+  }
+  if(yearMatches.length){
+    out.tenureYears = yearMatches[0].val;
+    out.evidence.tenureYears = yearMatches[0].context.trim();
+    var roleMatch = yearMatches.find(function(y){ return /role|position|title|current job|this job/i.test(y.context); });
+    if(roleMatch && roleMatch.val !== out.tenureYears){
+      out.roleYears = roleMatch.val;
+      out.evidence.roleYears = roleMatch.context.trim();
+    }
+  }
+
+  // revenue / business size (word form, case-insensitive, requires business context nearby)
+  m = text.match(/\$?\s?(\d+(?:\.\d+)?)\s?(billion|million)\b[^.;\n]{0,25}/i);
+  if(m && /revenue|division|business unit|business|P&L/i.test(m[0])){
+    out.businessSize = m[0].trim(); out.evidence.businessSize = m[0].trim();
+  }
+  if(!out.businessSize){
+    // shorthand form e.g. "$2B division" - case-sensitive letter, no space before letter
+    m = text.match(/\$(\d+(?:\.\d+)?)(B|M)\b[^.;\n]{0,25}/);
+    if(m && /revenue|division|business unit|business|P&L/i.test(m[0])){
+      out.businessSize = m[0].trim(); out.evidence.businessSize = m[0].trim();
+    }
+  }
+
+  // geographic scope
+  m = text.match(/\b(global|international|national|regional|multi[- ]?state|multi[- ]?market|enterprise[- ]wide)\b\s*(?:responsibility|scope|role)?/i);
+  if(m){ out.geoScope = m[1]; out.evidence.geoScope = m[0].trim(); }
+
+  // functional scope - business units count (require an actual number, not any word)
+  m = text.match(new RegExp("(\\d+|"+NUM_WORD_ALT+")\\s+business units?","i"));
+  if(m){ out.functionalScope = m[0].trim(); }
+
+  if(/p&l ownership|p&l responsibility|owns the p&l|direct p&l/i.test(text)) out.pAndL = true;
+  if(/board exposure|exposure to the board|reports to.*board|presents to the board/i.test(text)) out.boardExposure = true;
+  if(/exposure to the (ceo|c-suite|executive team)|works closely with the (ceo|executive team)/i.test(text)) out.execExposure = true;
+
+  return out;
+}
+
+/* ---- Career Background ---- */
+function analyzeCareer(text, sentences, profile){
+  var facts = [], interpretations = [];
+  var progressionSentences = allSentenceMatches(sentences, /promot\w*|progress\w*|moved (into|up)|advanced to|previously (was|worked|held)|started (as|in)|prior to (that|this)/i);
+  progressionSentences.forEach(function(s){ facts.push(s); });
+
+  var narrative = null;
+  if(progressionSentences.length){
+    narrative = "The candidate described a career path that includes: " + progressionSentences.join(" ");
+  }
+
+  var interpretation = null;
+  if(/promot\w*.*(twice|two|three|multiple|several)|(twice|two|three|multiple|several).*promot\w*/i.test(text) ||
+     (progressionSentences.length>=2)){
+    interpretation = "The pattern described suggests a generally upward and continuous career trajectory, though the pace of recent progression should be considered alongside the candidate's stated views on advancement.";
+    interpretations.push(interpretation);
+  }
+
+  return {narrative:narrative, facts:progressionSentences, interpretations:interpretations};
+}
+
+/* ---- Motivation Analysis ---- */
+function analyzeMotivations(sentences){
+  var results = [];
+  MOTIVATION_CATEGORIES.forEach(function(cat){
+    var matchedSentences = [];
+    var negatedCount = 0;
+    sentences.forEach(function(s){
+      var hit = cat.indicators.some(function(re){ return re.test(s); });
+      if(!hit) return;
+      if(cat.gate && !cat.gate.test(s)){ return; } // factual mention only, no valence — not counted
+      if(isNegated(s)){ negatedCount++; }
+      else { matchedSentences.push(s); }
+    });
+    if(matchedSentences.length === 0) return; // Not Established -> omit from active list
+    var intensityHits = matchedSentences.filter(function(s){ return INTENSITY_WORDS.test(s); }).length;
+    var strength;
+    if(matchedSentences.length >= 2 || intensityHits >= 1) strength = "Strong";
+    else if(matchedSentences.length === 1) strength = "Moderate";
+    else strength = "Limited";
+    results.push({
+      theme:cat.theme, key:cat.key, evidence:matchedSentences, strength:strength,
+      negatedNearby: negatedCount>0
+    });
+  });
+
+  results.sort(function(a,b){
+    var order = {Strong:0,Moderate:1,Limited:2};
+    return order[a.strength]-order[b.strength];
+  });
+
+  var primary = null;
+  var strongOrModerate = results.filter(function(r){ return r.strength==="Strong" || r.strength==="Moderate"; });
+  if(strongOrModerate.length){
+    var top = strongOrModerate[0];
+    primary = {
+      theme: top.theme,
+      narrative: buildPrimaryMotivationNarrative(top)
+    };
+  }
+
+  return {categories:results, primary:primary};
+}
+
+function buildPrimaryMotivationNarrative(top){
+  var map = {
+    "Career Growth":"The candidate appears most responsive to opportunities offering clearer advancement or broader responsibility. Concerns about limited progression surfaced during the conversation and should be validated further.",
+    "Leadership Scope":"The candidate appears drawn to opportunities with greater leadership scope, influence, or enterprise-level exposure beyond the current role.",
+    "Company or Leadership Change":"Organizational change or leadership uncertainty at the current company may be contributing to the candidate's openness to a conversation.",
+    "Culture":"Cultural fit, or frustration with the current environment, appears to be a meaningful factor in how the candidate is evaluating opportunities.",
+    "Compensation":"Compensation-related themes were raised in a manner that may indicate they are a relevant factor, though this should be validated directly with the candidate.",
+    "Location / Lifestyle":"Location or lifestyle considerations appear to be a relevant factor in the candidate's thinking and should be explored further.",
+    "Company Performance / Stability":"Concerns about the stability or trajectory of the current organization may be contributing to the candidate's openness to exploring options.",
+    "Role Content":"The type of work and scope of responsibility in a potential new role appears to be a meaningful consideration for the candidate."
+  };
+  return map[top.theme] || ("The strongest available signal relates to " + top.theme + ", based on the evidence captured during the call.");
+}
+
+/* ---- Push / Pull Factors ---- */
+var PULL_CUES = [
+  {re:/asked (about|why).{0,30}(ceo|board|chief executive)/i, factor:"Interest in new leadership / CEO or board exposure"},
+  {re:/(larger|broader|greater|bigger|enterprise[- ]wide)\s+(scope|team|role|responsibility)/i, factor:"Larger scope or leadership responsibility in the new role"},
+  {re:/(excited|intrigued|interested) (about|by|in)/i, factor:"Expressed genuine interest in the opportunity"},
+  {re:/(growth trajectory|company('s)? growth|growing (company|organization))/i, factor:"Attracted to the growth trajectory of the prospective company"},
+  {re:/board.s expectations|presents to the board|board exposure/i, factor:"Board-level exposure in the new role"},
+  {re:/asked for next steps|requested next steps|asked.{0,15}next step/i, factor:"Proactively asked about next steps"}
+];
+var PUSH_CUES = [
+  {key:"career_growth", factor:"Limited advancement in current organization"},
+  {key:"leadership_change", factor:"Leadership uncertainty or organizational change at current company"},
+  {key:"culture", factor:"Frustration with current culture or political environment"},
+  {key:"stability", factor:"Concerns about current company performance or stability"},
+  {key:"compensation", factor:"Compensation-related dissatisfaction"},
+  {key:"role_content", factor:"Reduced or limited role content / scope"}
+];
+
+function analyzePushPull(sentences, motivationResult){
+  var push = [];
+  var activeKeys = {};
+  motivationResult.categories.forEach(function(c){
+    if((c.strength==="Strong" || c.strength==="Moderate") && !c.negatedNearby){
+      activeKeys[c.key] = c;
+    }
+  });
+  PUSH_CUES.forEach(function(cue){
+    if(activeKeys[cue.key]){
+      push.push({factor:cue.factor, evidence:activeKeys[cue.key].evidence[0]});
+    }
+  });
+
+  var pull = [];
+  var fullText = sentences.join(" ");
+  PULL_CUES.forEach(function(cue){
+    var m = sentences.find(function(s){ return cue.re.test(s); });
+    if(m) pull.push({factor:cue.factor, evidence:m});
+  });
+
+  return {push:push, pull:pull};
+}
+
+/* ---- Compensation ---- */
+function analyzeCompensation(text, sentences){
+  var out = {base:null,baseEvidence:null,bonusPct:null,bonusEvidence:null,bonusDollar:null,
+    equity:null,equityMentionedOnly:false,equityEvidence:null,signOn:null,other:null,
+    estimatedTotal:null,estimatedTotalNote:null,expectations:null,expectationsEvidence:null,
+    alignment:"Not Enough Information"};
+
+  var m = text.match(/\$?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s?(k|K)?\s*(?:base salary|base pay|base compensation|base comp\.?|base)\b/i);
+  if(!m) m = text.match(/base(?:\s+salary|\s+pay|\s+compensation|\s+comp\.?)?\s*(?:is|of|at|around|approximately|~)?\s*\$?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s?(k|K)?/i);
+  if(m){
+    var raw = m[1].replace(/,/g,""); var suf = m[2];
+    var val = parseFloat(raw);
+    if(!isNaN(val)){
+      if(suf && suf.toLowerCase()==="k") val*=1000;
+      else if(!suf && val>=50 && val<=999) val*=1000;
+      else if(!suf && val<50) val = null;
+      if(val){ out.base = val; out.baseEvidence = m[0].trim(); }
+    }
+  }
+
+  (function extractBonusPct(){
+    var bonusClause = sentences.find(function(s){ return /\bbonus\b/i.test(s); });
+    if(!bonusClause) return;
+    var dm = bonusClause.match(/(\d{1,3})\s?(?:%|percent\b)/i);
+    if(dm){ out.bonusPct = parseFloat(dm[1]); out.bonusEvidence = bonusClause; return; }
+    var wm = bonusClause.match(new RegExp("\\b("+NUM_WORD_ALT+")\\s+percent\\b","i"));
+    if(wm){ var n = wordsToNumber(wm[1]); if(n){ out.bonusPct = n; out.bonusEvidence = bonusClause; } }
+  })();
+
+  m = text.match(/\$?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s?(k|K|m|M|million|mm)?\s*(?:in\s+)?(?:equity|stock|RSUs?|LTI\b|long[- ]term incentive)/i);
+  if(m){
+    var eraw = m[1].replace(/,/g,""); var esuf = (m[2]||"").toLowerCase();
+    var eval_ = parseFloat(eraw);
+    if(!isNaN(eval_)){
+      if(esuf==="k") eval_*=1000;
+      else if(esuf==="m"||esuf==="mm"||esuf==="million") eval_*=1000000;
+      else if(!esuf && eval_<100) eval_ = null;
+      if(eval_){ out.equity = eval_; out.equityEvidence = m[0].trim(); }
+    }
+  }
+  if(out.equity===null && /\bequity\b|\bstock\b|\bLTI\b|long[- ]term incentive/i.test(text)){
+    out.equityMentionedOnly = true;
+    var em = text.match(/[^.;\n]*\b(equity|stock|LTI|long[- ]term incentive)[^.;\n]*/i);
+    if(em) out.equityEvidence = em[0].trim();
+  }
+
+  m = text.match(/\$?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s?(k|K|m|M)?\s*sign[- ]on/i);
+  if(m){
+    var sraw = m[1].replace(/,/g,""); var ssuf=(m[2]||"").toLowerCase();
+    var sval = parseFloat(sraw);
+    if(ssuf==="k") sval*=1000; else if(ssuf==="m") sval*=1000000; else if(sval<100) sval=null;
+    if(sval){ out.signOn = sval; }
+  }
+
+  // expectations - what candidate would need to move
+  var expSentence = sentences.find(function(s){
+    return /would need to (be|move|see)|would require|to (seriously )?consider (a move|leaving)|need(s)? to be (higher|meaningfully higher)|require.{0,15}(premium|increase)/i.test(s);
+  });
+  if(expSentence){
+    out.expectationsEvidence = expSentence;
+    var pm = expSentence.match(/\$?\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s?(k|K)?/);
+    if(pm && pm[1] && parseFloat(pm[1].replace(/,/g,""))>10){
+      var pv = parseFloat(pm[1].replace(/,/g,""));
+      if(pm[2] && pm[2].toLowerCase()==="k") pv*=1000; else if(pv>=50 && pv<=999) pv*=1000;
+      out.expectations = fmtMoney(pv) + " (approximate, based on call notes)";
+    } else {
+      out.expectations = "Not explicitly quantified — candidate indicated compensation would need to increase without specifying an amount.";
+    }
+  }
+
+  if(out.base && out.bonusPct){
+    var total = out.base + (out.base * out.bonusPct/100);
+    var note = "Base plus target bonus only.";
+    if(out.equity){ total += out.equity; note = "Includes base, target bonus, and stated equity value."; }
+    else if(out.equityMentionedOnly){ note += " Equity was mentioned but no amount was specified, so it is excluded from this estimate."; }
+    out.estimatedTotal = total;
+    out.estimatedTotalNote = note;
+  }
+
+  if(out.expectations && out.base){
+    out.alignment = "Requires Validation";
+  } else if(out.expectations===null){
+    out.alignment = "Not Enough Information";
+  }
+  if(/compensation would need to move meaningfully higher|meaningful premium/i.test(text)){
+    out.alignment = "Potential Gap";
+  }
+
+  return out;
+}
+
+/* ---- Culture ---- */
+var CULTURE_THEMES = ["entrepreneurial","collaborative","high accountability","low bureaucracy","fast-paced","fast paced",
+  "mission-driven","mission driven","stable","growth-oriented","growth oriented","team-focused","team focused","autonomous","structured","bureaucratic","political","politics"];
+
+function analyzeCulture(sentences){
+  var preferred = [], current = [], considerations = [];
+  sentences.forEach(function(s){
+    var lc = s.toLowerCase();
+    CULTURE_THEMES.forEach(function(t){
+      if(lc.indexOf(t)===-1) return;
+      var isCurrent = /current|his (company|organization)|her (company|organization)|there|at (his|her) (company|organization)/i.test(s) && /describ\w*|current|is fairly|has been/i.test(s);
+      var isPreference = /values?|important|prefers?|likes?|wants?|looking for|little patience|dislikes?|hates?/i.test(s);
+      if(isPreference && !isCurrent){
+        if(!preferred.some(function(p){return p.evidence===s;})) preferred.push({theme:t, evidence:s});
+      } else {
+        if(!current.some(function(p){return p.evidence===s;})) current.push({theme:t, evidence:s});
+      }
+    });
+  });
+  if(/politic\w*/i.test(sentences.join(" ")) && preferred.some(function(p){return p.theme.indexOf("politic")>-1;})){
+    considerations.push("Candidate expressed sensitivity to political environments — worth exploring specific examples of what has caused frustration in the past.");
+  }
+  return {preferred:preferred, current:current, considerations:considerations};
+}
+
+/* ---- Location / Relocation ---- */
+function analyzeLocation(text, sentences){
+  var out = {currentLocation:null,desiredLocation:null,status:"Not Discussed",considerations:[],followUpNeeded:[]};
+
+  var m = text.match(/(?:is |he is |she is |candidate is )?based in ([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?)/);
+  if(m) out.currentLocation = m[1];
+  var m2 = text.match(/(?:role|position|opportunity|job)\b[^.;\n]{0,20}?\bin ([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?)/i);
+  if(m2) out.desiredLocation = m2[1];
+
+  var relocationSentences = allSentenceMatches(sentences, /relocat\w*|\bmove to\b|\bmoving to\b|based in|\bcommute\b/i);
+
+  if(/would need to (talk|discuss).{0,40}(spouse|wife|husband|partner|family|her|his|him)\b|need to seriously discuss|need(s)? to be discussed with (his|her) (wife|husband|spouse|family)/i.test(text)){
+    out.status = "Open With Conditions";
+    out.considerations.push("Relocation would require further discussion with spouse/family before a decision can be made.");
+    out.followUpNeeded.push("Confirm timeline for discussing relocation with spouse/family and any conditions that would need to be met.");
+  }
+  if(/not (rejecting|ruling out)|open to (dallas|charlotte|relocat\w*)|would consider relocat\w*/i.test(text)){
+    if(out.status==="Not Discussed") out.status = "Open With Conditions";
+  }
+  if(/not sure (it is|it's) workable|complicated right now|difficult (to move|right now)|children.{0,30}(school|graduation)/i.test(text)){
+    out.status = "Uncertain";
+    out.considerations.push("Family circumstances (e.g., children's schooling) introduce timing complexity around relocation.");
+    out.followUpNeeded.push("Clarify how school-year timing affects relocation feasibility and whether a later start date would help.");
+  }
+  if(/not open to relocat\w*|unwilling to relocat\w*|will not relocate|does not want to relocate/i.test(text)){
+    out.status = "Not Open";
+  }
+  if(out.desiredLocation && out.currentLocation && out.desiredLocation.toLowerCase()===out.currentLocation.toLowerCase()){
+    out.status = "Not Discussed";
+    out.considerations.push("Opportunity is in the same location as the candidate's current base, so relocation is not applicable.");
+  }
+  if(relocationSentences.length && out.status==="Not Discussed"){
+    out.status = "Uncertain";
+  }
+  if(out.considerations.length===0 && relocationSentences.length){
+    out.considerations.push(relocationSentences[0]);
+  }
+  if(out.status==="Uncertain" || out.status==="Open With Conditions"){
+    if(out.followUpNeeded.length===0) out.followUpNeeded.push("Validate how serious the candidate is about relocating and who else is involved in that decision.");
+  }
+  return out;
+}
+
+/* ---- Interest Level ---- */
+var INTEREST_POSITIVE = [
+  {re:/asked[^.;\n]{0,60}(next step|ceo|board|reason|strategy|reporting|team|process)/i, label:"Asked detailed questions about the role, leadership, or process"},
+  {re:/asked (detailed|specific|thoughtful|several|pointed) questions/i, label:"Asked thoughtful, detailed questions during the call"},
+  {re:/asked for next steps|requested next steps/i, label:"Proactively requested next steps"},
+  {re:/(excited|intrigued|genuinely interested|interested) (about|by|in)/i, label:"Expressed genuine interest or excitement"},
+  {re:/discussed (his|her)?.{0,10}compensation expectations|would need to be (higher|meaningfully higher)/i, label:"Engaged in a compensation expectations discussion"},
+  {re:/seriously discuss.{0,20}relocat|talk it through with (his|her)?\s?(wife|husband|spouse|her|him)/i, label:"Engaged seriously with relocation considerations"},
+  {re:/voluntarily (mentioned|shared|discussed)/i, label:"Voluntarily shared career motivations"},
+  {re:/said (he|she) would be open to a further conversation|open to (a )?further conversation|moderately engaged/i, label:"Indicated openness to continuing the conversation"},
+  {re:/prepared to resign|ready to resign|accept(ing)? (an )?offer/i, label:"Indicated readiness to resign or accept an offer"},
+  {re:/wants? (clarity|to understand).{0,30}(start date|timing|notice)|discussed (the )?timing/i, label:"Discussed timing and start date considerations"}
+];
+var INTEREST_CAUTION = [
+  {re:/not actively (searching|looking)/i, label:"Describes self as not actively looking"},
+  {re:/not in a rush|no rush/i, label:"Stated no urgency to make a change"},
+  {re:/(very|genuinely|really) happy (at|with)|no complaints/i, label:"Expressed strong satisfaction in current role"},
+  {re:/decline\w* (next steps|to continue)/i, label:"Declined to continue or take next steps"},
+  {re:/avoid\w*.{0,15}compensation/i, label:"Avoided discussing compensation"}
+];
+
+function analyzeInterest(sentences){
+  var positiveEvidence = [], cautionEvidence = [];
+  var text = sentences.join(" ");
+  INTEREST_POSITIVE.forEach(function(cue){
+    var s = sentences.find(function(x){ return cue.re.test(x); });
+    if(s) positiveEvidence.push({label:cue.label, evidence:s});
+  });
+  INTEREST_CAUTION.forEach(function(cue){
+    var s = sentences.find(function(x){ return cue.re.test(x); });
+    if(s) cautionEvidence.push({label:cue.label, evidence:s});
+  });
+
+  var level;
+  var describesNotLooking = cautionEvidence.some(function(c){ return /not actively looking/i.test(c.label); });
+  if(positiveEvidence.length>=3 && cautionEvidence.length<=1) level = "High";
+  else if(describesNotLooking && positiveEvidence.length>=1) level = "Early / Exploratory";
+  else if(positiveEvidence.length>=2) level = "Moderate";
+  else if(positiveEvidence.length===1) level = "Limited";
+  else if(positiveEvidence.length===0 && cautionEvidence.length===0) level = "Unclear";
+  else level = "Limited";
+
+  return {level:level, positiveEvidence:positiveEvidence, cautionEvidence:cautionEvidence};
+}
+
+/* ---- Market Activity ---- */
+function analyzeMarketActivity(sentences){
+  var text = sentences.join(" ");
+  var evidence = [];
+  var status = "No Other Activity Mentioned";
+
+  var s1 = sentences.find(function(s){ return /another recruiter|different recruiter|recruiter (called|reached out|contacted)/i.test(s); });
+  if(s1){ evidence.push(s1); status = "Informal Market Activity"; }
+
+  var s2 = sentences.find(function(s){ return /(currently )?in (another|a different) process|interviewing with|in (the )?process with/i.test(s); });
+  if(s2){ evidence.push(s2); status = "Active in Other Processes"; }
+
+  var s3 = sentences.find(function(s){ return /final rounds?|late[- ]stage|final[- ]stage|shortlist/i.test(s); });
+  if(s3){ evidence.push(s3); status = "Late-Stage Other Process"; }
+
+  var s4 = sentences.find(function(s){ return /has an offer|received an offer|pending offer|competing offer/i.test(s); });
+  if(s4){ evidence.push(s4); status = "Competing Offer"; }
+
+  return {status:status, evidence:evidence};
+}
+
+/* ---- Counteroffer / Retention Risk ---- */
+function analyzeCounteroffer(sentences, profile){
+  var text = sentences.join(" ");
+  var indicators = [];
+  var score = 0;
+
+  var s;
+  if((s = sentences.find(function(x){return /strong relationship with.{0,20}(ceo|leadership|president)/i.test(x);}))){
+    indicators.push("Strong personal relationship with current leadership: \"" + s + "\""); score++;
+  }
+  if((s = sentences.find(function(x){return /shortlist|eventual (president|ceo|cfo|coo) role|internal (promotion|opportunity)/i.test(x);}))){
+    indicators.push("Potential internal advancement may be in play: \"" + s + "\""); score++;
+  }
+  if((s = sentences.find(function(x){return /unvested equity|equity (that )?(finishes|completes) vesting|vesting in/i.test(x);}))){
+    indicators.push("Unvested equity creates a financial incentive to stay: \"" + s + "\""); score++;
+  }
+  if((s = sentences.find(function(x){return /would (likely )?(come back with|present|offer)? ?a counteroffer|counter.?offer/i.test(x);}))){
+    indicators.push("Candidate directly addressed counteroffer likelihood: \"" + s + "\""); score += 2;
+  }
+  if((s = sentences.find(function(x){return /hard to replace|difficult to replace|critical to the (team|company)/i.test(x);}))){
+    indicators.push("Candidate may be difficult to replace, increasing retention motivation: \"" + s + "\""); score++;
+  }
+
+  var moneyWouldNotKeep = /money alone would not keep|not (just )?about (the )?money/i.test(text);
+  var explicitAccept = /would accept (a )?counteroffer|likely (stay|accept) if countered/i.test(text);
+  var explicitDecline = /would not consider a counteroffer|not driven by money|already decided to leave/i.test(text);
+
+  var risk;
+  if(explicitAccept) risk = "High";
+  else if(explicitDecline) risk = "Low";
+  else if(score>=2) risk = "High";
+  else if(score===1) risk = "Moderate";
+  else risk = "Not Enough Information";
+
+  if(profile.tenureYears && profile.tenureYears>=5 && indicators.length===0){
+    indicators.push("Candidate has notable tenure (" + profile.tenureYears + " years), though tenure alone is not treated as a retention risk indicator without additional evidence.");
+  }
+  if(moneyWouldNotKeep){
+    indicators.push("Candidate indicated compensation alone would not necessarily keep them, which may temper retention risk.");
+  }
+
+  var validateQuestions = [];
+  if(risk!=="Low"){
+    validateQuestions.push("If your current company presented a counteroffer, how would you evaluate it?");
+  }
+  if(score>0){
+    validateQuestions.push("How would you weigh the relationship and unresolved internal opportunities against a new role elsewhere?");
+  }
+  if(risk==="Not Enough Information"){
+    validateQuestions.push("Has retention or a counteroffer come up in any conversations with your current company?");
+  }
+
+  return {risk:risk, indicators:indicators, validateQuestions:validateQuestions};
+}
+
+/* ---- Candidate Concerns ---- */
+var CONCERN_CATEGORIES = [
+  {key:"compensation", label:"Compensation", re:/compensation|salary|base pay|bonus|equity/i},
+  {key:"location", label:"Location / Relocation", re:/relocat\w*|location|commute|move to|based in/i},
+  {key:"reporting", label:"Reporting Structure", re:/reporting structure|reports? to|who (it|the role) reports to/i},
+  {key:"stability", label:"Company Stability", re:/stability|declin\w*|layoffs?|uncertain\w*|bankrupt\w*/i},
+  {key:"scope", label:"Role Scope", re:/scope of the role|role scope|limited to one division|scope is limited/i},
+  {key:"culture", label:"Culture", re:/culture|politic\w*|bureaucra\w*/i},
+  {key:"travel", label:"Travel", re:/\btravel\b/i},
+  {key:"industry", label:"Industry", re:/industry experience|new industry|industry fit/i},
+  {key:"timing", label:"Position Timing", re:/timing|start date|notice period|school year/i},
+  {key:"reason_open", label:"Reason Role Is Open", re:/why (the|this) (role|position|job) is open|reason (the )?(role|position) is open|replacement or a newly created/i},
+  {key:"pe", label:"Private Equity Ownership", re:/private equity|PE.backed|PE ownership/i},
+  {key:"family", label:"Family Impact", re:/\bfamily\b|\bchildren\b|\bspouse\b|\bwife\b|\bhusband\b/i}
+];
+var CONCERN_CUES = /concern\w*|worried|worries|hesitant|unsure|not sure|would need to|issue with|risk\w*|careful|caution|difficult|complicated|struggl\w*|reluctant/i;
+var SIGNIFICANT_CUES = /major (issue|concern)|significant (issue|concern)|deal.breaker|serious concern/i;
+var QUESTION_CUES = /asked (about|why)/i;
+
+function analyzeConcerns(sentences){
+  var out = [];
+  var seen = {};
+  CONCERN_CATEGORIES.forEach(function(cat){
+    var s = sentences.find(function(x){ return cat.re.test(x) && (CONCERN_CUES.test(x) || QUESTION_CUES.test(x)); });
+    if(!s) return;
+    var status;
+    if(SIGNIFICANT_CUES.test(s)) status = "Significant Objection";
+    else if(QUESTION_CUES.test(s) && !CONCERN_CUES.test(s)) status = "Needs Clarification";
+    else if(/would need to|not sure|unsure|uncertain/i.test(s)) status = "Needs Clarification";
+    else status = "Raised";
+    if(!seen[cat.key]){
+      out.push({concern:cat.label, evidence:s, status:status});
+      seen[cat.key]=true;
+    }
+  });
+  return out;
+}
+
+/* ---- Questions Asked by Candidate ---- */
+function analyzeQuestions(sentences){
+  var out = [];
+  sentences.forEach(function(s){
+    if(!/asked|wanted to know|wondered|questioned|inquired/i.test(s)) return;
+    var topic = null;
+    if(/ceo/i.test(s)) topic = "The CEO's background, tenure, or leadership approach";
+    else if(/board/i.test(s)) topic = "Board composition or expectations";
+    else if(/why.{0,20}(role|position|job).{0,10}(is )?open|reason.{0,15}(role|position).{0,10}open|replacement or a newly created/i.test(s)) topic = "Why the position is open (replacement vs. newly created)";
+    else if(/compensation|salary|bonus|equity/i.test(s)) topic = "Compensation structure or details";
+    else if(/relocat|location/i.test(s)) topic = "Relocation or location details";
+    else if(/team|report(s|ing)? to|reporting structure/i.test(s)) topic = "Team structure or reporting relationships";
+    else if(/process|timeline|next step/i.test(s)) topic = "Search process, timeline, or next steps";
+    else if(/growth trajectory|strategy|ownership|private equity/i.test(s)) topic = "Company strategy, growth trajectory, or ownership structure";
+    else topic = "A specific question raised during the call (see notes for detail)";
+    if(out.indexOf(topic)===-1) out.push(topic);
+  });
+  return out;
+}
+
+/* ---- Communication Observations ---- */
+var COMM_CUES = [
+  {re:/asked several (detailed )?questions|asked (detailed|specific|thoughtful) questions|asked several follow.up questions/i, style:"Asked detailed questions"},
+  {re:/gave (concrete|specific|detailed) examples|provided (specific|detailed) examples|detailed examples of/i, style:"Provided specific examples"},
+  {re:/answers?.{0,15}(were|was) direct and specific|direct and specific|straightforward and direct/i, style:"Direct and specific"},
+  {re:/concise|brief and to the point/i, style:"Concise"},
+  {re:/answers? were vague|vague answers|unclear answers|hard to get specifics/i, style:"Responses were vague"},
+  {re:/required (significant )?prompting|needed prompting|had to be prompted/i, style:"Required significant prompting"},
+  {re:/thoughtful and specific|thoughtful, specific/i, style:"Thoughtful and specific responses"}
+];
+function analyzeCommunication(sentences){
+  var styles = [];
+  COMM_CUES.forEach(function(cue){
+    var s = sentences.find(function(x){ return cue.re.test(x); });
+    if(s) styles.push({style:cue.style, evidence:s});
+  });
+  var exploreFurther = [];
+  if(styles.length===0){
+    exploreFurther.push("The notes do not contain enough detail about how the candidate communicated during the call to characterize style. Consider noting this directly in future calls.");
+  } else {
+    exploreFurther.push("Continue observing communication style across future conversations, including with client-facing situations such as interviews.");
+  }
+  return {styles:styles, exploreFurther:exploreFurther};
+}
+
+/* ---- Timing ---- */
+function analyzeTiming(sentences){
+  var s = sentences.find(function(x){
+    return /notice period|start date|resign\w*|timeline|two weeks|available to start|school year|process timeline/i.test(x);
+  });
+  return {mentioned: !!s, evidence: s || null};
+}
+
+/* ---- Coverage ---- */
+function analyzeCoverage(a){
+  function status(covered, partial){
+    if(covered) return "Covered";
+    if(partial) return "Partially Covered";
+    return "Not Covered";
+  }
+  var cats = [];
+  cats.push({name:"Background", status: status(a.career.facts.length>0, a.profile.evidence.tenureYears)});
+  cats.push({name:"Current Scope", status: status(!!(a.profile.reportsTo && a.profile.teamSize), !!(a.profile.reportsTo || a.profile.teamSize))});
+  cats.push({name:"Career Progression", status: status(a.career.facts.length>=2, a.career.facts.length===1)});
+  cats.push({name:"Motivation", status: status(!!a.motivation.primary, a.motivation.categories.length>0)});
+  cats.push({name:"Compensation", status: status(!!(a.compensation.base && a.compensation.bonusPct), !!(a.compensation.base || a.compensation.bonusPct || a.compensation.equityMentionedOnly))});
+  cats.push({name:"Culture", status: status(a.culture.preferred.length>0, a.culture.current.length>0)});
+  cats.push({name:"Location / Relocation", status: status(a.location.status!=="Not Discussed", a.location.considerations.length>0)});
+  cats.push({name:"Interest", status: status(a.interest.level!=="Unclear", a.interest.positiveEvidence.length>0 || a.interest.cautionEvidence.length>0)});
+  cats.push({name:"Other Opportunities", status: status(a.marketActivity.status!=="No Other Activity Mentioned", false)});
+  cats.push({name:"Counteroffer Risk", status: status(a.counteroffer.risk!=="Not Enough Information", a.counteroffer.indicators.length>0)});
+  cats.push({name:"Concerns", status: status(a.concerns.length>0, false)});
+  cats.push({name:"Timing", status: status(a.timing.mentioned, false)});
+
+  var covered = cats.filter(function(c){return c.status==="Covered";}).length;
+  var partial = cats.filter(function(c){return c.status==="Partially Covered";}).length;
+  var pct = Math.round(((covered + partial*0.5) / cats.length) * 100);
+
+  return {categories:cats, percent:pct};
+}
+
+/* ---- Gaps and Follow-Ups ---- */
+function analyzeGaps(a){
+  var gaps = [];
+  var followUps = [];
+
+  if(!a.motivation.primary){
+    gaps.push({area:"Primary Motivation", why:"The call did not establish a clear reason the candidate might consider leaving their current organization.",
+      question:"What would need to be different in your next role for you to consider leaving your current organization?"});
+    followUps.push("What would need to be different in your next role for you to leave your current organization?");
+  }
+  if(!a.compensation.base){
+    gaps.push({area:"Current Compensation", why:"Current base compensation was not clearly established in the notes.",
+      question:"Can you walk me through your current total compensation, including base, bonus, and any equity?"});
+    followUps.push("Can you walk me through your current total compensation, including base, bonus, and equity?");
+  }
+  if(!a.compensation.expectations){
+    gaps.push({area:"Compensation Expectations", why:"Current compensation may be discussed, but the compensation required to make a move was not established.",
+      question:"What would the overall compensation structure need to look like for you to seriously consider making a change?"});
+    followUps.push("What level of total compensation would realistically be required for you to make a move?");
+  }
+  if(a.location.status==="Not Discussed"){
+    gaps.push({area:"Relocation", why:"Location and relocation willingness were not discussed on this call.",
+      question:"Is relocation something you and your family would be open to discussing for the right opportunity?"});
+    followUps.push("Is relocation something you and your family would be open to discussing for the right opportunity?");
+  } else if(a.location.status==="Open With Conditions" || a.location.status==="Uncertain"){
+    followUps.push("How serious is relocation as an option, and who else would be involved in that decision?");
+  }
+  if(a.culture.preferred.length===0){
+    gaps.push({area:"Culture Preferences", why:"The candidate's preferred working environment or culture was not clearly discussed.",
+      question:"What kind of culture or working environment brings out your best work?"});
+    followUps.push("What kind of culture or working environment brings out your best work?");
+  }
+  if(a.interest.level==="Unclear"){
+    gaps.push({area:"Interest Level", why:"The candidate's level of interest in exploring this opportunity further was not clearly established.",
+      question:"On a scale of your overall interest, how would you describe where you are after this conversation?"});
+    followUps.push("How would you describe your level of interest in continuing this conversation?");
+  }
+  if(a.marketActivity.status==="No Other Activity Mentioned"){
+    followUps.push("Are you currently engaged in any other conversations or processes with other organizations?");
+  } else {
+    followUps.push("Where are you in the other process(es) you mentioned, and what is the expected timeline?");
+  }
+  if(a.counteroffer.risk==="Not Enough Information" || a.counteroffer.risk==="Moderate" || a.counteroffer.risk==="High"){
+    followUps.push("If your current company presented a counteroffer, how would you evaluate it?");
+  }
+  if(!a.timing.mentioned){
+    gaps.push({area:"Timing", why:"Notice period, availability, or timing considerations were not discussed.",
+      question:"If this moved forward, what would your timing and notice period look like?"});
+    followUps.push("If this moved forward, what would your timing and notice period look like?");
+  }
+  if(a.concerns.length===0){
+    followUps.push("Are there any specific concerns or open questions on your mind about this opportunity so far?");
+  }
+
+  // dedupe, cap
+  var uniq = [];
+  followUps.forEach(function(f){ if(uniq.indexOf(f)===-1) uniq.push(f); });
+  if(uniq.length>8) uniq = uniq.slice(0,8);
+  if(uniq.length<3){
+    var fallback = ["What questions do you have for us at this stage?", "What would make this opportunity compelling enough to move forward?"];
+    fallback.forEach(function(f){ if(uniq.length<3 && uniq.indexOf(f)===-1) uniq.push(f); });
+  }
+
+  return {gaps:gaps, followUps:uniq};
+}
+
+/* ---- Consultant Takeaway ---- */
+function buildTakeaway(a){
+  var parts = [];
+  if(a.motivation.primary){
+    parts.push("The candidate appears credible, with " + a.motivation.primary.theme.toLowerCase() + " representing the clearest potential motivation identified so far.");
+  } else {
+    parts.push("A clear primary motivation has not yet been established, and this should be a focus of the next conversation.");
+  }
+
+  var interestPhrase = {
+    "High":"Interest in continuing the conversation appears strong based on the evidence gathered.",
+    "Moderate":"Interest is present but should continue to be developed.",
+    "Early / Exploratory":"Interest is still early and exploratory, which is common and not necessarily a negative signal at this stage.",
+    "Limited":"Interest appears limited at this stage based on the available evidence.",
+    "Unclear":"The candidate's level of interest is not yet clear from this conversation."
+  }[a.interest.level] || "";
+  parts.push(interestPhrase);
+
+  if(a.location.status==="Open With Conditions" || a.location.status==="Uncertain"){
+    parts.push("Relocation remains unresolved and should be validated before significant advancement.");
+  } else if(a.location.status==="Not Open"){
+    parts.push("Relocation appears to be an obstacle that should be addressed directly.");
+  }
+
+  var toConfirm = [];
+  if(!a.compensation.expectations) toConfirm.push("compensation expectations");
+  if(a.marketActivity.status!=="No Other Activity Mentioned") toConfirm.push("the seriousness and timeline of the candidate's other market activity");
+  if(a.counteroffer.risk==="Moderate" || a.counteroffer.risk==="High") toConfirm.push("counteroffer risk given the retention indicators identified");
+  if(toConfirm.length){
+    parts.push((toConfirm.length>1 ? "Several items" : "One item") + " should be confirmed before significant advancement, including " + toConfirm.join(" and ") + ".");
+  }
+
+  return parts.filter(function(p){return p && p.trim().length;}).join(" ");
+}
+
+/* =========================================================================
+   ATTACHMENT HANDLING
+   ========================================================================= */
+var attachedFiles = []; // {id, name, status, textContent}
+
+function classifyExtension(name){
+  var ext = (name.split(".").pop()||"").toLowerCase();
+  if(["txt","md","text","csv"].indexOf(ext)>-1) return "text";
+  if(["rtf"].indexOf(ext)>-1) return "partial";
+  if(["pdf","doc","docx","ppt","pptx","xls","xlsx"].indexOf(ext)>-1) return "binary";
+  return "unknown";
+}
+
+function handleFiles(fileList){
+  var files = Array.prototype.slice.call(fileList);
+  files.forEach(function(file){
+    var kind = classifyExtension(file.name);
+    var record = {id:uid(), name:file.name, status:"Unsupported", textContent:""};
+    if(kind==="text"){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var content = String(e.target.result||"");
+        record.textContent = content;
+        record.status = content.trim().length>10 ? "Parsed" : "Partially Parsed";
+        renderAttachList();
+      };
+      reader.onerror = function(){ record.status = "Partially Parsed"; renderAttachList(); };
+      reader.readAsText(file);
+      record.status = "Parsed";
+    } else if(kind==="partial"){
+      record.status = "Partially Parsed";
+    } else if(kind==="binary"){
+      record.status = "Attached — Text Not Available";
+    } else {
+      record.status = "Unsupported";
+    }
+    attachedFiles.push(record);
+  });
+  renderAttachList();
+}
+
+function statusClass(status){
+  if(status==="Parsed") return "status-parsed";
+  if(status==="Partially Parsed") return "status-partial";
+  if(status==="Attached — Text Not Available") return "status-unavailable";
+  return "status-unsupported";
+}
+
+function renderAttachList(){
+  var wrap = document.getElementById("attachList");
+  if(!attachedFiles.length){ wrap.innerHTML = ""; return; }
+  wrap.innerHTML = attachedFiles.map(function(f){
+    return '<div class="attach-item">' +
+      '<span class="attach-name" title="'+esc(f.name)+'">'+esc(f.name)+'</span>' +
+      '<span style="display:flex;align-items:center;gap:8px;">' +
+      '<span class="status-pill '+statusClass(f.status)+'">'+esc(f.status)+'</span>' +
+      '<button class="attach-remove" data-remove="'+f.id+'" title="Remove">&times;</button>' +
+      '</span></div>';
+  }).join("");
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-remove]"), function(btn){
+    btn.addEventListener("click", function(){
+      attachedFiles = attachedFiles.filter(function(f){ return f.id !== btn.getAttribute("data-remove"); });
+      renderAttachList();
+    });
+  });
+}
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+var state = {
+  id: null,
+  meta: {candidateName:"",company:"",title:"",search:"",callType:"",consultant:"",callDate:""},
+  notesText: "",
+  attachments: [],
+  analysis: null,
+  edits: {},
+  savedAt: null
+};
+
+var STORAGE_KEY = "cnp_saved_calls_v1";
+
+function getMetaFromForm(){
+  return {
+    candidateName: document.getElementById("fCandidate").value.trim(),
+    company: document.getElementById("fCompany").value.trim(),
+    title: document.getElementById("fTitle").value.trim(),
+    search: document.getElementById("fSearch").value.trim(),
+    callType: document.getElementById("fCallType").value,
+    consultant: document.getElementById("fConsultant").value.trim(),
+    callDate: document.getElementById("fDate").value
+  };
+}
+function setFormFromMeta(meta){
+  document.getElementById("fCandidate").value = meta.candidateName||"";
+  document.getElementById("fCompany").value = meta.company||"";
+  document.getElementById("fTitle").value = meta.title||"";
+  document.getElementById("fSearch").value = meta.search||"";
+  document.getElementById("fCallType").value = meta.callType||"";
+  document.getElementById("fConsultant").value = meta.consultant||"";
+  document.getElementById("fDate").value = meta.callDate||"";
+}
+
+/* =========================================================================
+   RENDERING — PROCESS OUTPUT
+   ========================================================================= */
+var SECTION_KEYS = ["profile","career","motivation","pushpull","compensation","culture","location","interest","market","counteroffer","concerns","questions","communication","gaps","followups","takeaway"];
+
+function tagForStrength(s){
+  var cls = s==="Strong"?"tag-strong":(s==="Moderate"?"tag-moderate":(s==="Limited"?"tag-limited":"tag-none"));
+  return '<span class="tag '+cls+'">'+esc(s)+'</span>';
+}
+function tagForRisk(r){
+  var cls = (r==="High")?"tag-high":(r==="Low"?"tag-low":"tag-neutral");
+  return '<span class="tag '+cls+'">'+esc(r)+'</span>';
+}
+
+function editControl(key, label){
+  return '<button class="btn-text" data-edit="'+key+'">Edit</button>';
+}
+
+function sectionWrapper(key, title, bodyHtml, plainTextForEdit){
+  var edited = state.edits[key];
+  var badge = edited ? '<span class="edited-badge">Consultant Edited</span>' : "";
+  var content = edited ? '<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;">'+esc(edited)+'</div>' : bodyHtml;
+  return '<div class="section-block" data-section="'+key+'">' +
+    '<div class="section-head"><h4><span class="bar"></span>'+esc(title)+' '+badge+'</h4>' +
+    '<div>'+editControl(key)+'</div></div>' +
+    '<div class="section-content" data-plain="'+esc(plainTextForEdit||"")+'">'+content+'</div>' +
+    '<div class="edit-mode" data-editmode="'+key+'" style="display:none;">' +
+    '<textarea class="edit-area">'+esc(plainTextForEdit||"")+'</textarea>' +
+    '<div class="edit-actions"><button class="btn btn-primary btn-sm" style="width:auto;" data-save-edit="'+key+'">Save</button>' +
+    '<button class="btn btn-secondary btn-sm" data-cancel-edit="'+key+'">Cancel</button></div></div>' +
+    '</div>';
+}
+
+function renderProfile(p){
+  var rows = [
+    ["Reports To", p.reportsTo],
+    ["Team Size", p.teamSize!==null ? p.teamSize + " people" : null],
+    ["Years With Company", p.tenureYears!==null ? p.tenureYears + " years" : null],
+    ["Years In Current Role", p.roleYears!==null ? p.roleYears + " years" : null],
+    ["Business / Revenue Scope", p.businessSize],
+    ["Geographic Scope", p.geoScope],
+    ["Functional Scope", p.functionalScope],
+    ["P&L Responsibility", p.pAndL ? "Indicated" : null],
+    ["Board Exposure", p.boardExposure ? "Indicated" : null],
+    ["Executive Leadership Exposure", p.execExposure ? "Indicated" : null]
+  ];
+  var html = rows.map(function(r){
+    var v = safeText(r[1], null);
+    return '<div class="value-row"><div class="k">'+esc(r[0])+'</div><div class="v">'+(v?esc(v):'<span class="na">Not Provided</span>')+'</div></div>';
+  }).join("");
+  var plain = "CANDIDATE PROFILE\n" + rows.map(function(r){ return r[0]+": "+(safeText(r[1],"Not Provided")); }).join("\n");
+  return sectionWrapper("profile","Candidate Profile", html, plain);
+}
+
+function renderCareer(c){
+  var html = "";
+  if(c.narrative){
+    html += '<div class="fact-block fact"><div class="fact-label">Documented Fact</div><div>'+esc(c.narrative)+'</div></div>';
+  } else {
+    html += '<div class="fact-block gap"><div class="fact-label">Information Gap</div><div>Career background and progression were not clearly discussed in the notes provided.</div></div>';
+  }
+  if(c.interpretations.length){
+    c.interpretations.forEach(function(i){
+      html += '<div class="fact-block interp"><div class="fact-label">Analytical Interpretation</div><div>'+esc(i)+'</div></div>';
+    });
+  }
+  var plain = "CAREER BACKGROUND\n" + (c.narrative || "Not Established") + (c.interpretations.length ? ("\n\nInterpretation: " + c.interpretations.join(" ")) : "");
+  return sectionWrapper("career","Career Background", html, plain);
+}
+
+function renderMotivation(m){
+  var html = "";
+  if(m.primary){
+    html += '<div class="mini-card" style="background:var(--red-light);border-color:#f6c3af;">' +
+      '<div class="mc-top"><div class="mc-title">Primary Potential Motivation: '+esc(m.primary.theme)+'</div></div>' +
+      '<div style="font-size:13px;margin-top:4px;">'+esc(m.primary.narrative)+'</div></div>';
+  } else {
+    html += '<div class="fact-block gap"><div class="fact-label">Information Gap</div><div>Motivation Not Yet Established. The call notes do not yet provide clear evidence of what would motivate this candidate to consider a move. This should be a focus of the next conversation.</div></div>';
+  }
+  if(m.categories.length){
+    html += '<div style="margin-top:12px;">' + m.categories.map(function(c){
+      return '<div class="mini-card"><div class="mc-top"><div class="mc-title">'+esc(c.theme)+'</div>'+tagForStrength(c.strength)+'</div>' +
+        '<div class="mc-evidence">"'+esc(c.evidence[0])+'"'+(c.evidence.length>1?' (+'+(c.evidence.length-1)+' more reference'+(c.evidence.length>2?'s':'')+')':'')+'</div></div>';
+    }).join("") + '</div>';
+  }
+  var plain = "PRIMARY POTENTIAL MOTIVATION\n" + (m.primary ? (m.primary.theme+"\n"+m.primary.narrative) : "Motivation Not Yet Established") +
+    "\n\nMOTIVATION SIGNALS\n" + (m.categories.length ? m.categories.map(function(c){return c.theme+" — "+c.strength+": \""+c.evidence[0]+"\"";}).join("\n") : "None clearly established.");
+  return sectionWrapper("motivation","Primary Motivation Analysis", html, plain);
+}
+
+function renderPushPull(pp){
+  var pushHtml = pp.push.length ? pp.push.map(function(f){
+    return '<div class="mini-card"><div class="mc-title">'+esc(f.factor)+'</div><div class="mc-evidence">"'+esc(f.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No clearly supported push factors identified yet.</div>';
+  var pullHtml = pp.pull.length ? pp.pull.map(function(f){
+    return '<div class="mini-card"><div class="mc-title">'+esc(f.factor)+'</div><div class="mc-evidence">"'+esc(f.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No clearly supported pull factors identified yet.</div>';
+  var html = '<div class="factor-cols"><div><div class="factor-col-title">Push Factors</div>'+pushHtml+'</div>' +
+    '<div><div class="factor-col-title">Pull Factors</div>'+pullHtml+'</div></div>';
+  var plain = "PUSH FACTORS\n" + (pp.push.length ? pp.push.map(function(f){return "- "+f.factor+" (\""+f.evidence+"\")";}).join("\n") : "None identified.") +
+    "\n\nPULL FACTORS\n" + (pp.pull.length ? pp.pull.map(function(f){return "- "+f.factor+" (\""+f.evidence+"\")";}).join("\n") : "None identified.");
+  return sectionWrapper("pushpull","Push and Pull Factors", html, plain);
+}
+
+function compRow(label, value){
+  return '<div class="value-row"><div class="k">'+esc(label)+'</div><div class="v">'+(value?esc(value):'<span class="na">Not Provided</span>')+'</div></div>';
+}
+function renderCompensation(c){
+  var html = '<div style="margin-bottom:10px;"><b style="font-size:12px;letter-spacing:0.4px;color:var(--gray-text);text-transform:uppercase;">Current Compensation</b></div>';
+  html += compRow("Base", c.base ? fmtMoney(c.base) : null);
+  html += compRow("Bonus", c.bonusPct ? c.bonusPct + "% target" : null);
+  html += compRow("Equity / LTI", c.equity ? fmtMoney(c.equity) : (c.equityMentionedOnly ? "Mentioned — amount not specified" : null));
+  html += compRow("Sign-On", c.signOn ? fmtMoney(c.signOn) : null);
+  html += compRow("Estimated Total", c.estimatedTotal ? fmtMoney(c.estimatedTotal) + " (Estimate — " + c.estimatedTotalNote + ")" : null);
+  html += '<div style="margin:14px 0 10px 0;"><b style="font-size:12px;letter-spacing:0.4px;color:var(--gray-text);text-transform:uppercase;">Compensation Expectations</b></div>';
+  html += compRow("Expectations", c.expectations);
+  html += '<div style="margin:14px 0 6px 0;"><b style="font-size:12px;letter-spacing:0.4px;color:var(--gray-text);text-transform:uppercase;">Compensation Alignment</b></div>';
+  html += '<span class="tag tag-moderate">'+esc(c.alignment)+'</span>';
+
+  var plain = "COMPENSATION\nBase: "+(c.base?fmtMoney(c.base):"Not Provided")+"\nBonus: "+(c.bonusPct?c.bonusPct+"% target":"Not Provided")+
+    "\nEquity / LTI: "+(c.equity?fmtMoney(c.equity):(c.equityMentionedOnly?"Mentioned — amount not specified":"Not Provided"))+
+    "\nEstimated Total: "+(c.estimatedTotal?fmtMoney(c.estimatedTotal)+" (Estimate)":"Not Enough Information")+
+    "\nCompensation Expectations: "+(c.expectations||"Not Established")+
+    "\nCompensation Alignment: "+c.alignment;
+  return sectionWrapper("compensation","Compensation", html, plain);
+}
+
+function renderCulture(c){
+  var html = "";
+  html += '<div class="value-row"><div class="k">Preferred Environment</div><div class="v">'+
+    (c.preferred.length ? c.preferred.map(function(p){return esc(p.theme);}).join(", ") : '<span class="na">Not Established</span>')+'</div></div>';
+  html += '<div class="value-row"><div class="k">Current Culture Observations</div><div class="v">'+
+    (c.current.length ? c.current.map(function(p){return esc(p.theme);}).join(", ") : '<span class="na">Not Provided</span>')+'</div></div>';
+  if(c.preferred.length){
+    html += '<div style="margin-top:8px;">' + c.preferred.map(function(p){
+      return '<div class="mini-card"><div class="mc-evidence">"'+esc(p.evidence)+'"</div></div>';
+    }).join("") + '</div>';
+  }
+  if(c.considerations.length){
+    html += '<div class="fact-block interp" style="margin-top:8px;"><div class="fact-label">Potential Culture Considerations</div><div>'+esc(c.considerations.join(" "))+'</div></div>';
+  }
+  var plain = "CULTURE AND ENVIRONMENT\nPreferred Environment: "+(c.preferred.length?c.preferred.map(function(p){return p.theme;}).join(", "):"Not Established")+
+    "\nCurrent Culture Observations: "+(c.current.length?c.current.map(function(p){return p.theme;}).join(", "):"Not Provided");
+  return sectionWrapper("culture","Culture and Environment", html, plain);
+}
+
+function renderLocation(l){
+  var html = '<div class="value-row"><div class="k">Current Location</div><div class="v">'+(l.currentLocation?esc(l.currentLocation):'<span class="na">Not Provided</span>')+'</div></div>';
+  html += '<div class="value-row"><div class="k">Opportunity Location</div><div class="v">'+(l.desiredLocation?esc(l.desiredLocation):'<span class="na">Not Provided</span>')+'</div></div>';
+  html += '<div class="value-row"><div class="k">Relocation Position</div><div class="v"><span class="tag tag-moderate">'+esc(l.status)+'</span></div></div>';
+  if(l.considerations.length){
+    html += '<div style="margin-top:8px;"><b style="font-size:12px;color:var(--gray-text);">Relevant Considerations</b>' +
+      l.considerations.map(function(c){return '<div class="mini-card"><div class="mc-evidence">'+esc(c)+'</div></div>';}).join("") + '</div>';
+  }
+  if(l.followUpNeeded.length){
+    html += '<div class="fact-block gap" style="margin-top:8px;"><div class="fact-label">Relocation Follow-Up Needed</div><div>'+esc(l.followUpNeeded.join(" "))+'</div></div>';
+  }
+  var plain = "LOCATION / RELOCATION\nCurrent Location: "+(l.currentLocation||"Not Provided")+"\nOpportunity Location: "+(l.desiredLocation||"Not Provided")+
+    "\nRelocation Position: "+l.status+(l.considerations.length?("\nConsiderations: "+l.considerations.join(" ")):"");
+  return sectionWrapper("location","Location and Relocation", html, plain);
+}
+
+function renderInterest(i){
+  var html = '<div style="margin-bottom:10px;"><span class="tag '+(i.level==="High"?"tag-strong":(i.level==="Unclear"?"tag-none":"tag-moderate"))+'">'+esc(i.level)+'</span></div>';
+  html += '<div class="value-row"><div class="k">Evidence of Interest</div></div>';
+  html += i.positiveEvidence.length ? i.positiveEvidence.map(function(e){
+    return '<div class="mini-card"><div class="mc-title">'+esc(e.label)+'</div><div class="mc-evidence">"'+esc(e.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No strong positive indicators identified yet.</div>';
+  html += '<div class="value-row" style="margin-top:8px;"><div class="k">Evidence of Hesitation</div></div>';
+  html += i.cautionEvidence.length ? i.cautionEvidence.map(function(e){
+    return '<div class="mini-card"><div class="mc-title">'+esc(e.label)+'</div><div class="mc-evidence">"'+esc(e.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No notable hesitation indicators identified.</div>';
+  var plain = "INTEREST LEVEL\n"+i.level+"\n\nEvidence of Interest:\n"+(i.positiveEvidence.length?i.positiveEvidence.map(function(e){return "- "+e.label;}).join("\n"):"None noted.")+
+    "\n\nEvidence of Hesitation:\n"+(i.cautionEvidence.length?i.cautionEvidence.map(function(e){return "- "+e.label;}).join("\n"):"None noted.");
+  return sectionWrapper("interest","Candidate Interest", html, plain);
+}
+
+function renderMarket(m){
+  var html = '<div style="margin-bottom:10px;"><span class="tag tag-moderate">'+esc(m.status)+'</span></div>';
+  html += m.evidence.length ? m.evidence.map(function(e){
+    return '<div class="mini-card"><div class="mc-evidence">"'+esc(e)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No other market activity mentioned in the notes.</div>';
+  var plain = "OTHER MARKET ACTIVITY\n"+m.status+(m.evidence.length?("\n"+m.evidence.join("\n")):"");
+  return sectionWrapper("market","Other Opportunities / Market Activity", html, plain);
+}
+
+function renderCounteroffer(c){
+  var html = '<div style="margin-bottom:10px;">'+tagForRisk(c.risk)+'</div>';
+  html += '<div class="value-row"><div class="k">Risk Indicators</div></div>';
+  html += c.indicators.length ? c.indicators.map(function(i){
+    return '<div class="mini-card"><div class="mc-evidence">'+esc(i)+'</div></div>';
+  }).join("") : '<div class="empty-note">No specific retention risk indicators identified.</div>';
+  if(c.validateQuestions.length){
+    html += '<div class="fact-block interp" style="margin-top:8px;"><div class="fact-label">Questions to Validate</div><div>'+c.validateQuestions.map(esc).join("<br>")+'</div></div>';
+  }
+  var plain = "COUNTEROFFER / RETENTION RISK\n"+c.risk+"\n\nRisk Indicators:\n"+(c.indicators.length?c.indicators.join("\n"):"None identified.")+
+    "\n\nQuestions to Validate:\n"+c.validateQuestions.join("\n");
+  return sectionWrapper("counteroffer","Counteroffer and Retention Risk", html, plain);
+}
+
+function renderConcerns(list){
+  var html = list.length ? list.map(function(c){
+    return '<div class="mini-card"><div class="mc-top"><div class="mc-title">'+esc(c.concern)+'</div><span class="tag tag-moderate">'+esc(c.status)+'</span></div>' +
+      '<div class="mc-evidence">"'+esc(c.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No specific candidate concerns were identified in the notes.</div>';
+  var plain = "CANDIDATE CONCERNS\n" + (list.length ? list.map(function(c){return c.concern+" ("+c.status+"): \""+c.evidence+"\"";}).join("\n") : "None identified.");
+  return sectionWrapper("concerns","Candidate Concerns", html, plain);
+}
+
+function renderQuestions(qs){
+  var html = qs.length ? '<ul class="qa-list">' + qs.map(function(q,i){
+    return '<li><span class="qa-num">'+(i+1)+'.</span><span>'+esc(q)+'</span></li>';
+  }).join("") + '</ul>' : '<div class="empty-note">No specific candidate questions were identified in the notes.</div>';
+  var plain = "QUESTIONS ASKED BY CANDIDATE\n" + (qs.length ? qs.map(function(q,i){return (i+1)+". "+q;}).join("\n") : "None identified.");
+  return sectionWrapper("questions","Questions Asked by Candidate", html, plain);
+}
+
+function renderCommunication(c){
+  var html = c.styles.length ? c.styles.map(function(s){
+    return '<div class="mini-card"><div class="mc-title">'+esc(s.style)+'</div><div class="mc-evidence">"'+esc(s.evidence)+'"</div></div>';
+  }).join("") : '<div class="empty-note">Limited direct evidence of communication style in the notes provided.</div>';
+  html += '<div class="fact-block interp" style="margin-top:8px;"><div class="fact-label">Areas to Explore Further</div><div>'+esc(c.exploreFurther.join(" "))+'</div></div>';
+  var plain = "COMMUNICATION OBSERVATIONS\n" + (c.styles.length ? c.styles.map(function(s){return "- "+s.style;}).join("\n") : "Limited direct evidence available.");
+  return sectionWrapper("communication","Communication Observations", html, plain);
+}
+
+function renderGaps(gaps){
+  var html = gaps.length ? gaps.map(function(g){
+    return '<div class="gap-item"><div class="gap-title">'+esc(g.area)+'</div>' +
+      '<div class="gap-line"><b>Why It Matters:</b> '+esc(g.why)+'</div>' +
+      '<div class="gap-line"><b>Recommended Question:</b> "'+esc(g.question)+'"</div></div>';
+  }).join("") : '<div class="empty-note">No major information gaps identified — this call appears to have covered the core areas well.</div>';
+  var plain = "INFORMATION GAPS\n" + (gaps.length ? gaps.map(function(g){return g.area+"\nWhy It Matters: "+g.why+"\nRecommended Question: \""+g.question+"\"";}).join("\n\n") : "None identified.");
+  return sectionWrapper("gaps","Information Gaps", html, plain);
+}
+
+function renderFollowUps(list){
+  var html = '<ul class="qa-list">' + list.map(function(q,i){
+    return '<li><span class="qa-num">'+(i+1)+'.</span><span>'+esc(q)+'</span></li>';
+  }).join("") + '</ul>';
+  var plain = "RECOMMENDED FOLLOW-UP QUESTIONS\n" + list.map(function(q,i){return (i+1)+". "+q;}).join("\n");
+  return sectionWrapper("followups","Recommended Follow-Up Questions", html, plain);
+}
+
+function renderTakeaway(t){
+  var edited = state.edits["takeaway"];
+  var text = edited || t;
+  var badge = edited ? '<span class="edited-badge">Consultant Edited</span>' : "";
+  var html = '<div class="takeaway-box"><h4>Consultant Takeaway '+badge+'</h4><p>'+esc(text)+'</p>' +
+    '<div style="margin-top:10px;"><button class="btn-text" style="color:#ffb199;" data-edit="takeaway">Edit</button></div></div>' +
+    '<div class="edit-mode" data-editmode="takeaway" style="display:none;">' +
+    '<textarea class="edit-area">'+esc(text)+'</textarea>' +
+    '<div class="edit-actions"><button class="btn btn-primary btn-sm" style="width:auto;" data-save-edit="takeaway">Save</button>' +
+    '<button class="btn btn-secondary btn-sm" data-cancel-edit="takeaway">Cancel</button></div></div>';
+  return '<div data-section="takeaway">'+html+'</div>';
+}
+
+function renderLoxoNotes(a, meta){
+  var key = "loxo";
+  var generated = buildLoxoNotes(a, meta);
+  var edited = state.edits[key];
+  var text = edited || generated;
+  var badge = edited ? '<span class="edited-badge">Consultant Edited</span>' : "";
+  var html = '<div class="loxo-subtitle">Formatted for pasting directly into a Loxo candidate note or activity log.</div>' +
+    '<div class="loxo-box">'+esc(text)+'</div>' +
+    '<div class="btn-row" style="margin-top:10px;">' +
+    '<button class="btn btn-secondary btn-sm" data-copy-loxo="1">Copy Loxo Notes</button>' +
+    '</div>';
+  return '<div class="section-block" data-section="'+key+'">' +
+    '<div class="section-head"><h4><span class="bar"></span>Loxo-Ready Notes '+badge+'</h4>' +
+    '<div>'+editControl(key)+'</div></div>' +
+    '<div class="section-content">'+html+'</div>' +
+    '<div class="edit-mode" data-editmode="'+key+'" style="display:none;">' +
+    '<textarea class="edit-area">'+esc(text)+'</textarea>' +
+    '<div class="edit-actions"><button class="btn btn-primary btn-sm" style="width:auto;" data-save-edit="'+key+'">Save</button>' +
+    '<button class="btn btn-secondary btn-sm" data-cancel-edit="'+key+'">Cancel</button></div></div>' +
+    '</div>';
+}
+
+function renderCoverage(cov){
+  var dotClass = function(s){ return s==="Covered"?"cov-covered":(s==="Partially Covered"?"cov-partial":"cov-none"); };
+  var html = '<div class="coverage-wrap"><div class="coverage-pct">'+cov.percent+'%</div>' +
+    '<div class="coverage-bar-outer"><div class="coverage-bar-inner" style="width:'+cov.percent+'%;"></div></div></div>' +
+    '<div class="coverage-grid">' + cov.categories.map(function(c){
+      return '<div class="coverage-row"><span><span class="cov-dot '+dotClass(c.status)+'"></span>'+esc(c.name)+'</span><span class="subtle">'+esc(c.status)+'</span></div>';
+    }).join("") + '</div>';
+  return '<div class="section-block"><div class="section-head"><h4><span class="bar"></span>Call Coverage</h4></div>' + html + '</div>';
+}
+
+function renderFullAnalysis(a){
+  var html = "";
+  html += renderCoverage(a.coverage);
+  html += renderTakeaway(a.takeaway);
+  html += renderLoxoNotes(a, a.meta || {});
+  html += renderMotivation(a.motivation);
+  html += renderPushPull(a.pushPull);
+  html += renderProfile(a.profile);
+  html += renderCareer(a.career);
+  html += renderCompensation(a.compensation);
+  html += renderCulture(a.culture);
+  html += renderLocation(a.location);
+  html += renderInterest(a.interest);
+  html += renderMarket(a.marketActivity);
+  html += renderCounteroffer(a.counteroffer);
+  html += renderConcerns(a.concerns);
+  html += renderQuestions(a.questions);
+  html += renderCommunication(a.communication);
+  html += renderGaps(a.gaps);
+  html += renderFollowUps(a.followUps);
+  if(a.attachNote){
+    html += '<div class="subtle" style="margin-top:6px;">'+esc(a.attachNote)+'</div>';
+  }
+  return html;
+}
+
+/* =========================================================================
+   RENDERING — CANDIDATE SUMMARY
+   ========================================================================= */
+function renderSummaryView(){
+  var wrap = document.getElementById("summaryContent");
+  if(!state.analysis){
+    wrap.innerHTML = '<div class="card"><div class="output-empty" style="min-height:200px;">' +
+      '<h3>No candidate summary yet</h3><p>Process call notes from the Process Notes tab to generate a candidate summary.</p></div></div>';
+    return;
+  }
+  var a = state.analysis, meta = state.meta;
+
+  var header = '<div class="summary-header">' +
+    '<div class="cand-name">'+esc(safeText(meta.candidateName,"Unnamed Candidate"))+'</div>' +
+    '<div class="cand-role">'+esc(safeText(meta.title,"Title Not Provided"))+' at '+esc(safeText(meta.company,"Company Not Provided"))+'</div>' +
+    '<div class="summary-meta-grid">' +
+    metaCell("Search / Client", meta.search) +
+    metaCell("Call Type", meta.callType) +
+    metaCell("Call Date", meta.callDate) +
+    metaCell("Consultant", meta.consultant) +
+    '</div></div>';
+
+  var toolbar = '<div class="summary-toolbar no-print">' +
+    '<button class="btn btn-primary" style="width:auto;" id="copySummaryBtn">Copy Candidate Summary</button>' +
+    '<button class="btn btn-secondary" id="copyLoxoBtn">Copy Loxo Notes</button>' +
+    '<button class="btn btn-secondary" id="printSummaryBtn">Print / Save Summary</button>' +
+    '<button class="btn btn-secondary" id="saveCallBtn">Save Call</button>' +
+    '<button class="btn btn-secondary" id="exportCallBtn">Export Call Data</button>' +
+    '<button class="btn btn-secondary" id="reprocessBtn">Reprocess Notes</button>' +
+    '</div>';
+
+  var body = '<div class="summary-body">';
+  body += summarySection("Candidate Snapshot", snapshotPlain(a,meta));
+  (function(){
+    var loxoText = state.edits["loxo"] || buildLoxoNotes(a, meta);
+    var loxoBadge = state.edits["loxo"] ? '<span class="edited-badge">Consultant Edited</span>' : "";
+    body += '<div class="section-block"><div class="section-head"><h4><span class="bar"></span>Loxo-Ready Notes '+loxoBadge+'</h4></div>' +
+      '<div class="loxo-subtitle">Formatted for pasting directly into a Loxo candidate note or activity log.</div>' +
+      '<div class="loxo-box">'+esc(loxoText)+'</div></div>';
+  })();
+  body += summaryBlock("profile","Current Role and Scope", profilePlain(a.profile));
+  body += summaryBlock("career","Career Background", a.career.narrative || "Not Established");
+  body += summaryBlock("motivation","Primary Potential Motivation", a.motivation.primary ? (a.motivation.primary.theme+" — "+a.motivation.primary.narrative) : "Motivation Not Yet Established.");
+  if(state.edits["pushpull"]){
+    body += summaryBlock("pushpull","Push and Pull Factors", "");
+  } else {
+    body += summaryListSection("Push Factors", a.pushPull.push.map(function(f){return f.factor+" — \""+f.evidence+"\"";}));
+    body += summaryListSection("Pull Factors", a.pushPull.pull.map(function(f){return f.factor+" — \""+f.evidence+"\"";}));
+  }
+  body += summaryBlock("compensation","Compensation", compPlain(a.compensation));
+  body += summaryBlock("culture","Culture and Environment", cultureP(a.culture));
+  body += summaryBlock("location","Location / Relocation", locationPlain(a.location));
+  body += summaryBlock("interest","Interest Level", a.interest.level + (a.interest.positiveEvidence.length? (" — "+a.interest.positiveEvidence.map(function(e){return e.label;}).join("; ")) : ""));
+  body += summaryBlock("market","Other Market Activity", a.marketActivity.status);
+  if(state.edits["concerns"]){
+    body += summaryBlock("concerns","Candidate Concerns", "");
+  } else {
+    body += summaryListSection("Candidate Concerns", a.concerns.map(function(c){return c.concern+" ("+c.status+")";}));
+  }
+  body += summaryBlock("counteroffer","Counteroffer / Retention Risk", a.counteroffer.risk);
+  if(state.edits["questions"]){
+    body += summaryBlock("questions","Questions Asked by Candidate", "");
+  } else {
+    body += summaryListSection("Questions Asked by Candidate", a.questions);
+  }
+  if(state.edits["communication"]){
+    body += summaryBlock("communication","Communication Observations", "");
+  } else {
+    body += summaryListSection("Communication Observations", a.communication.styles.map(function(s){return s.style;}));
+  }
+  if(state.edits["gaps"]){
+    body += summaryBlock("gaps","Information Gaps", "");
+  } else {
+    body += summaryListSection("Information Gaps", a.gaps.map(function(g){return g.area;}));
+  }
+  if(state.edits["followups"]){
+    body += summaryBlock("followups","Recommended Follow-Up Questions", "");
+  } else {
+    body += summaryListSection("Recommended Follow-Up Questions", a.followUps);
+  }
+  body += '<div class="takeaway-box"><h4>Consultant Takeaway '+(state.edits["takeaway"]?'<span class="edited-badge">Consultant Edited</span>':'')+'</h4><p>'+esc(state.edits["takeaway"]||a.takeaway)+'</p></div>';
+  body += '</div>';
+
+  wrap.innerHTML = header + toolbar + body;
+
+  document.getElementById("copySummaryBtn").addEventListener("click", copySummary);
+  document.getElementById("copyLoxoBtn").addEventListener("click", copyLoxoNotes);
+  document.getElementById("printSummaryBtn").addEventListener("click", function(){ window.print(); });
+  document.getElementById("saveCallBtn").addEventListener("click", saveCurrentCall);
+  document.getElementById("exportCallBtn").addEventListener("click", exportCallData);
+  document.getElementById("reprocessBtn").addEventListener("click", reprocessNotes);
+}
+function metaCell(label,val){
+  return '<div><div class="sm-label">'+esc(label)+'</div><div class="sm-value">'+esc(safeText(val,"Not Provided"))+'</div></div>';
+}
+function summarySection(title, text){
+  if(!text || !text.trim()) return "";
+  return '<div class="section-block"><div class="section-head"><h4><span class="bar"></span>'+esc(title)+'</h4></div>' +
+    '<div style="font-size:13px;line-height:1.65;white-space:pre-wrap;">'+esc(text)+'</div></div>';
+}
+function summaryBlock(key, title, fallbackText){
+  var edited = state.edits[key];
+  var text = edited || fallbackText;
+  if(!text || !String(text).trim()) return "";
+  var badge = edited ? ' <span class="edited-badge">Consultant Edited</span>' : "";
+  return '<div class="section-block"><div class="section-head"><h4><span class="bar"></span>'+esc(title)+badge+'</h4></div>' +
+    '<div style="font-size:13px;line-height:1.65;white-space:pre-wrap;">'+esc(text)+'</div></div>';
+}
+function summaryListSection(title, items){
+  if(!items || !items.length) return "";
+  return '<div class="section-block"><div class="section-head"><h4><span class="bar"></span>'+esc(title)+'</h4></div>' +
+    '<ul class="qa-list">'+items.map(function(it,i){return '<li><span class="qa-num">'+(i+1)+'.</span><span>'+esc(it)+'</span></li>';}).join("")+'</ul></div>';
+}
+function snapshotPlain(a,meta){
+  var lines = [];
+  lines.push((safeText(meta.candidateName,"The candidate")) + " is currently " + (safeText(meta.title,"in an unspecified role")) + " at " + (safeText(meta.company,"an unspecified company")) + ".");
+  if(a.profile.tenureYears!==null) lines.push("Approximately " + a.profile.tenureYears + " years with the company (based on notes; recommend validating exact tenure).");
+  if(a.profile.reportsTo) lines.push("Reports to the " + a.profile.reportsTo + ".");
+  if(a.profile.teamSize!==null) lines.push("Leads a team of approximately " + a.profile.teamSize + ".");
+  return lines.join(" ");
+}
+function profilePlain(p){
+  var lines = [];
+  lines.push("Reports To: " + safeText(p.reportsTo,"Not Provided"));
+  lines.push("Team Size: " + (p.teamSize!==null ? p.teamSize+" people" : "Not Provided"));
+  lines.push("Years With Company: " + (p.tenureYears!==null ? p.tenureYears+" years" : "Not Provided"));
+  if(p.businessSize) lines.push("Business / Revenue Scope: " + p.businessSize);
+  if(p.geoScope) lines.push("Geographic Scope: " + p.geoScope);
+  return lines.join("\n");
+}
+function compPlain(c){
+  var lines = [];
+  lines.push("Base: " + (c.base?fmtMoney(c.base):"Not Provided"));
+  lines.push("Bonus: " + (c.bonusPct?c.bonusPct+"% target":"Not Provided"));
+  lines.push("Equity / LTI: " + (c.equity?fmtMoney(c.equity):(c.equityMentionedOnly?"Mentioned — amount not specified":"Not Provided")));
+  lines.push("Estimated Total: " + (c.estimatedTotal?fmtMoney(c.estimatedTotal)+" (Estimate)":"Not Enough Information"));
+  lines.push("Compensation Expectations: " + safeText(c.expectations,"Not Established"));
+  lines.push("Compensation Alignment: " + c.alignment);
+  return lines.join("\n");
+}
+function cultureP(c){
+  var lines = [];
+  lines.push("Preferred Environment: " + (c.preferred.length?c.preferred.map(function(p){return p.theme;}).join(", "):"Not Established"));
+  lines.push("Current Culture Observations: " + (c.current.length?c.current.map(function(p){return p.theme;}).join(", "):"Not Provided"));
+  return lines.join("\n");
+}
+function locationPlain(l){
+  var lines = [];
+  lines.push("Current Location: " + safeText(l.currentLocation,"Not Provided"));
+  lines.push("Opportunity Location: " + safeText(l.desiredLocation,"Not Provided"));
+  lines.push("Relocation Position: " + l.status);
+  if(l.considerations.length) lines.push("Considerations: " + l.considerations.join(" "));
+  return lines.join("\n");
+}
+
+/* ---- Loxo-Ready Notes (condensed, CRM-paste-friendly plain text) ---- */
+function compLineShort(c){
+  var parts = [];
+  if(c.base) parts.push("Base " + fmtMoney(c.base));
+  if(c.bonusPct) parts.push(c.bonusPct + "% bonus");
+  if(c.equity) parts.push("equity " + fmtMoney(c.equity));
+  else if(c.equityMentionedOnly) parts.push("equity mentioned (amount unspecified)");
+  if(!parts.length) return "Not established on this call.";
+  var line = parts.join(", ") + ".";
+  if(c.estimatedTotal) line += " Est. total ~" + fmtMoney(c.estimatedTotal) + ".";
+  if(c.expectations) line += " Expectations: " + c.expectations + ".";
+  return line;
+}
+function locationLineShort(l){
+  var line = l.status;
+  if(l.currentLocation || l.desiredLocation){
+    line += " (" + safeText(l.currentLocation,"current location not provided") +
+      (l.desiredLocation ? (" → " + l.desiredLocation) : "") + ")";
+  }
+  if(l.considerations.length) line += " — " + l.considerations[0];
+  return line;
+}
+function cultureLineShort(c){
+  if(c.preferred.length) return c.preferred.map(function(p){return p.theme;}).join(", ");
+  return "Not established on this call.";
+}
+function concernsLineShort(list){
+  if(!list.length) return "None explicitly raised.";
+  return list.map(function(c){return c.concern + " (" + c.status + ")";}).join("; ");
+}
+function motivationLineShort(m){
+  if(!m.primary) return "Not yet established — worth clarifying on the next call.";
+  return m.primary.theme + " — " + m.primary.narrative;
+}
+function loxoSummaryLine(a, meta){
+  var name = safeText(meta.candidateName, "The candidate");
+  var role = safeText(meta.title, "an unspecified role");
+  var company = safeText(meta.company, "an unspecified company");
+  var searchName = safeText(meta.search, "this search");
+  var s = name + " is currently " + role + " at " + company + ", discussed in connection with " + searchName + ".";
+  if(a.motivation.primary){ s += " Primary potential motivation: " + a.motivation.primary.theme + "."; }
+  s += " Interest level: " + a.interest.level + ".";
+  return s;
+}
+function buildLoxoNotes(a, meta){
+  var L = [];
+  L.push("CALL NOTE — " + safeText(meta.callType,"Candidate Call") + " — " + safeText(meta.callDate,"Date not provided"));
+  L.push("Candidate: " + safeText(meta.candidateName,"Not provided") + " | " + safeText(meta.title,"Title not provided") + " at " + safeText(meta.company,"Company not provided"));
+  L.push("Search / Client: " + safeText(meta.search,"Not provided"));
+  L.push("Consultant: " + safeText(meta.consultant,"Not provided"));
+  L.push("");
+  L.push("SUMMARY");
+  L.push(loxoSummaryLine(a, meta));
+  L.push("");
+  L.push("KEY POINTS");
+  L.push("- Motivation: " + motivationLineShort(a.motivation));
+  L.push("- Compensation: " + compLineShort(a.compensation));
+  L.push("- Location / Relocation: " + locationLineShort(a.location));
+  L.push("- Culture Preferences: " + cultureLineShort(a.culture));
+  L.push("- Other Market Activity: " + a.marketActivity.status);
+  L.push("- Counteroffer Risk: " + a.counteroffer.risk);
+  L.push("- Candidate Concerns: " + concernsLineShort(a.concerns));
+  L.push("");
+  L.push("INTEREST LEVEL: " + a.interest.level);
+  L.push("");
+  L.push("NEXT STEPS");
+  var topFollowUps = (a.followUps||[]).slice(0,3);
+  if(topFollowUps.length){
+    topFollowUps.forEach(function(q){ L.push("- " + q); });
+  } else {
+    L.push("- Confirm interest and schedule next conversation.");
+  }
+  L.push("");
+  L.push("CONSULTANT TAKEAWAY");
+  L.push((state.edits && state.edits["takeaway"]) || a.takeaway || "Not yet established.");
+  return L.join("\n");
+}
+
+function buildPlainTextSummary(){
+  if(!state.analysis) return "";
+  var a = state.analysis, meta = state.meta;
+  var L = [];
+  L.push("CANDIDATE CALL SUMMARY");
+  L.push("=======================");
+  L.push("Candidate: " + safeText(meta.candidateName,"Not Provided"));
+  L.push("Current Title: " + safeText(meta.title,"Not Provided"));
+  L.push("Current Company: " + safeText(meta.company,"Not Provided"));
+  L.push("Search / Client: " + safeText(meta.search,"Not Provided"));
+  L.push("Call Date: " + safeText(meta.callDate,"Not Provided"));
+  L.push("Consultant: " + safeText(meta.consultant,"Not Provided"));
+  L.push("");
+  L.push("CANDIDATE SNAPSHOT");
+  L.push(snapshotPlain(a,meta));
+  L.push("");
+  var E = state.edits;
+  L.push("CURRENT ROLE AND SCOPE");
+  L.push(E.profile || profilePlain(a.profile));
+  L.push("");
+  L.push("CAREER BACKGROUND");
+  L.push(E.career || a.career.narrative || "Not Established");
+  L.push("");
+  L.push("PRIMARY POTENTIAL MOTIVATION");
+  L.push(E.motivation || (a.motivation.primary ? (a.motivation.primary.theme+"\n"+a.motivation.primary.narrative) : "Motivation Not Yet Established."));
+  L.push("");
+  if(E.pushpull){
+    L.push("PUSH AND PULL FACTORS");
+    L.push(E.pushpull);
+  } else {
+    L.push("PUSH FACTORS");
+    L.push(a.pushPull.push.length ? a.pushPull.push.map(function(f){return "- "+f.factor;}).join("\n") : "None identified.");
+    L.push("");
+    L.push("PULL FACTORS");
+    L.push(a.pushPull.pull.length ? a.pushPull.pull.map(function(f){return "- "+f.factor;}).join("\n") : "None identified.");
+  }
+  L.push("");
+  L.push("COMPENSATION");
+  L.push(E.compensation || compPlain(a.compensation));
+  L.push("");
+  L.push("CULTURE AND ENVIRONMENT");
+  L.push(E.culture || cultureP(a.culture));
+  L.push("");
+  L.push("LOCATION / RELOCATION");
+  L.push(E.location || locationPlain(a.location));
+  L.push("");
+  L.push("INTEREST LEVEL");
+  L.push(E.interest || a.interest.level);
+  L.push("");
+  L.push("OTHER MARKET ACTIVITY");
+  L.push(E.market || a.marketActivity.status);
+  L.push("");
+  L.push("CANDIDATE CONCERNS");
+  L.push(E.concerns || (a.concerns.length ? a.concerns.map(function(c){return "- "+c.concern+" ("+c.status+")";}).join("\n") : "None identified."));
+  L.push("");
+  L.push("COUNTEROFFER / RETENTION RISK");
+  L.push(E.counteroffer || a.counteroffer.risk);
+  L.push("");
+  L.push("QUESTIONS ASKED BY CANDIDATE");
+  L.push(E.questions || (a.questions.length ? a.questions.map(function(q,i){return (i+1)+". "+q;}).join("\n") : "None identified."));
+  L.push("");
+  L.push("COMMUNICATION OBSERVATIONS");
+  L.push(E.communication || (a.communication.styles.length ? a.communication.styles.map(function(s){return "- "+s.style;}).join("\n") : "Limited direct evidence available."));
+  L.push("");
+  L.push("INFORMATION GAPS");
+  L.push(E.gaps || (a.gaps.length ? a.gaps.map(function(g){return "- "+g.area+": "+g.why;}).join("\n") : "None identified."));
+  L.push("");
+  L.push("RECOMMENDED FOLLOW-UP QUESTIONS");
+  L.push(E.followups || a.followUps.map(function(q,i){return (i+1)+". "+q;}).join("\n"));
+  L.push("");
+  L.push("CONSULTANT TAKEAWAY");
+  L.push(E.takeaway || a.takeaway);
+  return L.join("\n");
+}
+
+function copySummary(){
+  var text = buildPlainTextSummary();
+  if(!text){ showToast("Nothing to copy yet."); return; }
+  copyToClipboard(text, "Candidate summary copied to clipboard.");
+}
+function copyLoxoNotes(){
+  if(!state.analysis){ showToast("Process call notes before copying Loxo notes."); return; }
+  var text = state.edits["loxo"] || buildLoxoNotes(state.analysis, state.meta);
+  copyToClipboard(text, "Loxo-ready notes copied to clipboard.");
+}
+function copyToClipboard(text, successMessage){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ showToast(successMessage); })
+      .catch(function(){ fallbackCopy(text, successMessage); });
+  } else {
+    fallbackCopy(text, successMessage);
+  }
+}
+function fallbackCopy(text, successMessage){
+  var ta = document.createElement("textarea");
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); showToast(successMessage || "Copied to clipboard."); }
+  catch(e){ showToast("Unable to copy automatically. Please select and copy manually."); }
+  document.body.removeChild(ta);
+}
+
+/* =========================================================================
+   PROCESS / EDIT / REPROCESS
+   ========================================================================= */
+function runProcessing(){
+  var notes = document.getElementById("notesInput").value.trim();
+  if(!notes) return;
+  state.meta = getMetaFromForm();
+  state.notesText = notes;
+  state.attachments = attachedFiles.slice();
+  state.edits = {};
+
+  document.getElementById("outputEmpty").style.display = "none";
+  document.getElementById("analysisOutput").style.display = "none";
+  document.getElementById("processingState").style.display = "flex";
+  document.getElementById("processBtn").disabled = true;
+
+  setTimeout(function(){
+    var attachTexts = attachedFiles.filter(function(f){return f.status==="Parsed" || f.status==="Partially Parsed";})
+      .map(function(f){return f.textContent;}).filter(Boolean);
+    try{
+      state.analysis = analyzeCall(state.meta, notes, attachTexts);
+    }catch(err){
+      state.analysis = null;
+      showToast("Something went wrong while processing. Please review the notes and try again.");
+      document.getElementById("processingState").style.display = "none";
+      document.getElementById("outputEmpty").style.display = "flex";
+      document.getElementById("processBtn").disabled = false;
+      return;
+    }
+    document.getElementById("processingState").style.display = "none";
+    var out = document.getElementById("analysisOutput");
+    out.style.display = "block";
+    out.innerHTML = renderFullAnalysis(state.analysis);
+    wireEditButtons(out);
+    document.getElementById("processBtn").disabled = false;
+    renderSummaryView();
+    showToast("Call notes processed.");
+  }, 700);
+}
+
+function wireEditButtons(container){
+  Array.prototype.forEach.call(container.querySelectorAll("[data-edit]"), function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-edit");
+      var block = container.querySelector('[data-section="'+key+'"]');
+      if(!block) return;
+      var contentEl = block.querySelector(".section-content");
+      var editMode = block.querySelector('[data-editmode="'+key+'"]');
+      if(contentEl) contentEl.style.display = "none";
+      if(editMode) editMode.style.display = "block";
+    });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-cancel-edit]"), function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-cancel-edit");
+      var block = container.querySelector('[data-section="'+key+'"]');
+      var contentEl = block.querySelector(".section-content");
+      var editMode = block.querySelector('[data-editmode="'+key+'"]');
+      if(contentEl) contentEl.style.display = "";
+      if(editMode) editMode.style.display = "none";
+    });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-save-edit]"), function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-save-edit");
+      var block = container.querySelector('[data-section="'+key+'"]');
+      var textarea = block.querySelector(".edit-area");
+      state.edits[key] = textarea.value;
+      document.getElementById("analysisOutput").innerHTML = renderFullAnalysis(state.analysis);
+      wireEditButtons(document.getElementById("analysisOutput"));
+      renderSummaryView();
+      showToast("Section updated and marked as consultant edited.");
+    });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-copy-loxo]"), function(btn){
+    btn.addEventListener("click", copyLoxoNotes);
+  });
+}
+
+function reprocessNotes(){
+  var hasEdits = Object.keys(state.edits).length>0;
+  if(hasEdits){
+    openModal("Reprocess Notes", "Reprocessing will regenerate the analysis and overwrite any consultant edits made to this call. Continue?", function(){
+      state.edits = {};
+      doReprocess();
+    });
+  } else {
+    doReprocess();
+  }
+}
+function doReprocess(){
+  var attachTexts = state.attachments.filter(function(f){return f.status==="Parsed" || f.status==="Partially Parsed";})
+    .map(function(f){return f.textContent;}).filter(Boolean);
+  state.analysis = analyzeCall(state.meta, state.notesText, attachTexts);
+  var out = document.getElementById("analysisOutput");
+  out.innerHTML = renderFullAnalysis(state.analysis);
+  wireEditButtons(out);
+  renderSummaryView();
+  showToast("Notes reprocessed.");
+}
+
+/* =========================================================================
+   SAVE / SAVED CALLS / EXPORT / IMPORT
+   ========================================================================= */
+function loadSavedCalls(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return [];
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){ return []; }
+}
+function persistSavedCalls(list){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+  catch(e){ showToast("Unable to save — local storage may be full or unavailable."); }
+}
+
+function serializeCurrentCall(){
+  return {
+    id: state.id || uid(),
+    meta: state.meta,
+    notesText: state.notesText,
+    attachments: (state.attachments||[]).map(function(f){return {name:f.name,status:f.status};}),
+    analysis: state.analysis,
+    edits: state.edits,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function saveCurrentCall(){
+  if(!state.analysis){ showToast("Process call notes before saving."); return; }
+  var record = serializeCurrentCall();
+  state.id = record.id;
+  var list = loadSavedCalls();
+  var idx = list.findIndex(function(c){return c.id===record.id;});
+  if(idx>-1) list[idx] = record; else list.push(record);
+  persistSavedCalls(list);
+  showToast("Call saved.");
+  renderSavedCallsView();
+}
+
+function renderSavedCallsView(){
+  var wrap = document.getElementById("savedCallsWrap");
+  var list = loadSavedCalls();
+  if(!list.length){
+    wrap.innerHTML = '<div class="saved-empty">No saved calls yet. Process a call and click "Save Call" from the Candidate Summary tab.</div>';
+    return;
+  }
+  list.sort(function(a,b){ return new Date(b.savedAt) - new Date(a.savedAt); });
+  var rows = list.map(function(c){
+    var m = c.meta||{};
+    return '<tr>' +
+      '<td>'+esc(safeText(m.candidateName,"Not Provided"))+'</td>' +
+      '<td>'+esc(safeText(m.company,"Not Provided"))+'</td>' +
+      '<td>'+esc(safeText(m.search,"Not Provided"))+'</td>' +
+      '<td>'+esc(safeText(m.callType,"Not Provided"))+'</td>' +
+      '<td>'+esc(safeText(m.callDate,"Not Provided"))+'</td>' +
+      '<td>'+esc(safeText(m.consultant,"Not Provided"))+'</td>' +
+      '<td style="white-space:nowrap;">' +
+      '<button class="btn-text" data-open="'+c.id+'">Open</button>' +
+      '<button class="btn-text" data-dup="'+c.id+'">Duplicate</button>' +
+      '<button class="btn-text" style="color:#a02b1f;" data-del="'+c.id+'">Delete</button>' +
+      '</td></tr>';
+  }).join("");
+  wrap.innerHTML = '<table class="saved-table"><thead><tr>' +
+    '<th>Candidate</th><th>Current Company</th><th>Search / Client</th><th>Call Type</th><th>Call Date</th><th>Consultant</th><th>Actions</th>' +
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-open]"), function(b){
+    b.addEventListener("click", function(){ openSavedCall(b.getAttribute("data-open")); });
+  });
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-dup]"), function(b){
+    b.addEventListener("click", function(){ duplicateSavedCall(b.getAttribute("data-dup")); });
+  });
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-del]"), function(b){
+    b.addEventListener("click", function(){
+      openModal("Delete Saved Call", "This will permanently delete this saved call. This cannot be undone. Continue?", function(){
+        deleteSavedCall(b.getAttribute("data-del"));
+      });
+    });
+  });
+}
+
+function openSavedCall(id){
+  var list = loadSavedCalls();
+  var rec = list.find(function(c){return c.id===id;});
+  if(!rec) return;
+  state.id = rec.id;
+  state.meta = rec.meta || {};
+  state.notesText = rec.notesText || "";
+  state.attachments = rec.attachments || [];
+  state.analysis = rec.analysis || null;
+  state.edits = rec.edits || {};
+
+  setFormFromMeta(state.meta);
+  document.getElementById("notesInput").value = state.notesText;
+  document.getElementById("processBtn").disabled = !state.notesText.trim();
+  attachedFiles = [];
+  renderAttachList();
+
+  if(state.analysis){
+    document.getElementById("outputEmpty").style.display = "none";
+    var out = document.getElementById("analysisOutput");
+    out.style.display = "block";
+    out.innerHTML = renderFullAnalysis(state.analysis);
+    wireEditButtons(out);
+  }
+  renderSummaryView();
+  switchView("processView");
+  showToast("Loaded saved call for " + safeText(state.meta.candidateName,"candidate") + ".");
+}
+
+function duplicateSavedCall(id){
+  var list = loadSavedCalls();
+  var rec = list.find(function(c){return c.id===id;});
+  if(!rec) return;
+  var copy = JSON.parse(JSON.stringify(rec));
+  copy.id = uid();
+  copy.meta = copy.meta || {};
+  copy.meta.candidateName = (copy.meta.candidateName || "Candidate") + " (Copy)";
+  copy.savedAt = new Date().toISOString();
+  list.push(copy);
+  persistSavedCalls(list);
+  renderSavedCallsView();
+  showToast("Call duplicated.");
+}
+
+function deleteSavedCall(id){
+  var list = loadSavedCalls().filter(function(c){return c.id!==id;});
+  persistSavedCalls(list);
+  renderSavedCallsView();
+  showToast("Saved call deleted.");
+}
+
+function exportCallData(){
+  if(!state.analysis){ showToast("Process call notes before exporting."); return; }
+  var record = serializeCurrentCall();
+  var blob = new Blob([JSON.stringify(record, null, 2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  var fname = (safeText(state.meta.candidateName,"candidate")).replace(/[^a-z0-9]+/gi,"_").toLowerCase();
+  a.download = "call_" + fname + "_" + (state.meta.callDate||"undated") + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Call data exported.");
+}
+
+function importCallData(file){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var parsed;
+    try{ parsed = JSON.parse(e.target.result); }
+    catch(err){ showToast("Import failed — the selected file is not valid JSON."); return; }
+    if(!parsed || typeof parsed !== "object" || !parsed.meta || typeof parsed.notesText !== "string"){
+      showToast("Import failed — the file does not match the expected call data format.");
+      return;
+    }
+    parsed.id = parsed.id || uid();
+    parsed.savedAt = new Date().toISOString();
+    var list = loadSavedCalls();
+    list.push(parsed);
+    persistSavedCalls(list);
+    renderSavedCallsView();
+    showToast("Call data imported successfully.");
+  };
+  reader.onerror = function(){ showToast("Import failed — could not read the selected file."); };
+  reader.readAsText(file);
+}
+
+/* =========================================================================
+   MODAL / TOAST
+   ========================================================================= */
+var modalConfirmCb = null;
+function openModal(title, body, onConfirm){
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").textContent = body;
+  modalConfirmCb = onConfirm;
+  document.getElementById("modalOverlay").classList.add("active");
+}
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("active");
+  modalConfirmCb = null;
+}
+function showToast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove("show"); }, 2800);
+}
+
+/* =========================================================================
+   NAVIGATION
+   ========================================================================= */
+function switchView(viewId){
+  Array.prototype.forEach.call(document.querySelectorAll(".view"), function(v){ v.classList.remove("active"); });
+  document.getElementById(viewId).classList.add("active");
+  Array.prototype.forEach.call(document.querySelectorAll(".nav-tab"), function(t){
+    t.classList.toggle("active", t.getAttribute("data-view")===viewId);
+  });
+  if(viewId==="summaryView") renderSummaryView();
+  if(viewId==="savedView") renderSavedCallsView();
+}
+
+/* =========================================================================
+   INIT / EVENT WIRING
+   ========================================================================= */
+function renderExamples(){
+  var wrap = document.getElementById("examplesList");
+  wrap.innerHTML = EXAMPLES.map(function(ex){
+    return '<div class="example-card" data-example="'+ex.key+'">' +
+      '<div class="ex-label">'+esc(ex.label)+'</div>' +
+      '<div class="ex-desc">'+esc(ex.desc)+'</div></div>';
+  }).join("");
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-example]"), function(card){
+    card.addEventListener("click", function(){
+      var ex = EXAMPLES.find(function(e){return e.key===card.getAttribute("data-example");});
+      if(!ex) return;
+      setFormFromMeta(ex.meta);
+      document.getElementById("notesInput").value = ex.notes;
+      document.getElementById("processBtn").disabled = false;
+      showToast("Loaded starting point: " + ex.label);
+    });
+  });
+}
+
+function init(){
+  document.getElementById("fDate").value = new Date().toISOString().slice(0,10);
+
+  Array.prototype.forEach.call(document.querySelectorAll(".nav-tab"), function(tab){
+    tab.addEventListener("click", function(){ switchView(tab.getAttribute("data-view")); });
+  });
+
+  document.getElementById("notesInput").addEventListener("input", function(){
+    document.getElementById("processBtn").disabled = this.value.trim().length===0;
+  });
+
+  document.getElementById("processBtn").addEventListener("click", runProcessing);
+
+  document.getElementById("attachBox").addEventListener("click", function(){
+    document.getElementById("fileInput").click();
+  });
+  document.getElementById("fileInput").addEventListener("change", function(e){
+    if(e.target.files && e.target.files.length){ handleFiles(e.target.files); e.target.value=""; }
+  });
+
+  document.getElementById("loadDemoBtn").addEventListener("click", function(){
+    setFormFromMeta(DEMO_CALL.meta);
+    document.getElementById("notesInput").value = DEMO_CALL.notes;
+    document.getElementById("processBtn").disabled = false;
+    showToast("Demo call loaded.");
+  });
+
+  document.getElementById("importInput").addEventListener("change", function(e){
+    if(e.target.files && e.target.files[0]) importCallData(e.target.files[0]);
+    e.target.value = "";
+  });
+
+  document.getElementById("modalCancel").addEventListener("click", closeModal);
+  document.getElementById("modalConfirm").addEventListener("click", function(){
+    var cb = modalConfirmCb;
+    closeModal();
+    if(cb) cb();
+  });
+  document.getElementById("modalOverlay").addEventListener("click", function(e){
+    if(e.target===this) closeModal();
+  });
+
+  renderExamples();
+  renderSavedCallsView();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SearchEval V2 — Carter Baldwin</title>
+<style>
+  :root {
+    color-scheme: light;
+    --og:#C9524F; --ogl:#FDF0F0; --bk:#0A0A0A; --wh:#FFFFFF; --lt:#F5F5F5; --bd:#E3E3E3;
+    --tx:#1E1E1E; --mt:#6B6B6B; --gn:#15803D; --gl:#DCFCE7; --rd:#DC2626; --rl:#FEF2F2;
+    --am:#B45309; --al:#FEF3C7; --chip-orange-text:#943131;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--lt); color:var(--tx); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:14px; line-height:1.45; }
+  #app { width:100%; min-height:100vh; }
+  h1,h2,h3 { margin:0; }
+  .muted { color:var(--mt); }
+  .tiny { font-size:11px; }
+  /* ---- top bar ---- */
+  .topbar { background:var(--bk); color:var(--wh); padding:12px 22px; display:flex; align-items:center; justify-content:space-between; }
+  .topbar-left { display:flex; align-items:center; gap:12px; }
+  .home-btn { background:none; border:1px solid #333; color:#ccc; border-radius:7px; padding:6px 12px; font-size:12.5px; cursor:pointer; }
+  .home-btn:hover { background:#1a1a1a; color:#fff; }
+  .logo { width:34px; height:34px; border-radius:8px; background:var(--og); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0; }
+  .wordmark-wrap { line-height:1.15; }
+  .wordmark { font-weight:700; font-size:15px; display:flex; align-items:center; gap:7px; }
+  .v2badge { background:rgba(201,82,79,.28); color:#f4b8b6; font-size:10px; font-weight:700; padding:1.5px 6px; border-radius:4px; letter-spacing:.03em; }
+  .brandtag { font-size:9px; letter-spacing:.14em; color:#8a8a8a; margin-top:1px; }
+  .mode-label { font-size:12.5px; color:#9a9a9a; }
+  /* ---- generic layout ---- */
+  .page { max-width:1080px; margin:0 auto; padding:36px 24px 80px; }
+  .page-narrow { max-width:880px; }
+  .center { text-align:center; }
+  .card { background:var(--wh); border:1px solid var(--bd); border-radius:12px; }
+  .pad { padding:16px; }
+  .pad-lg { padding:26px; }
+  .row { display:flex; gap:12px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+  label.field { display:block; margin-bottom:12px; }
+  label.field span.lbl { display:block; font-size:11px; font-weight:700; color:var(--mt); margin-bottom:5px; text-transform:uppercase; letter-spacing:.05em; }
+  input[type=text], input[type=number], textarea, select {
+    width:100%; background:var(--wh); border:1px solid var(--bd); border-radius:7px; color:var(--tx);
+    padding:9px 11px; font-size:13.5px; font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus {
+    outline:none; border-color:var(--og); box-shadow:0 0 0 2px rgba(201,82,79,.18);
+  }
+  textarea { resize:vertical; }
+  input[type=checkbox] { accent-color:var(--og); width:15px; height:15px; vertical-align:middle; }
+  .hint { display:block; font-size:11.5px; color:var(--mt); margin-top:4px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; border-radius:8px; font-size:13px; font-weight:600; padding:10px 16px; cursor:pointer; border:1px solid transparent; transition:.15s; white-space:nowrap; }
+  .btn-primary { background:var(--og); color:#fff; }
+  .btn-primary:hover { background:#b8433f; }
+  .btn-primary:disabled { background:#d9d9d9; color:#9a9a9a; cursor:default; }
+  .btn-dark { background:var(--bk); color:#fff; }
+  .btn-dark:hover { background:#222; }
+  .btn-secondary { background:transparent; border-color:var(--bd); color:var(--tx); }
+  .btn-secondary:hover { background:var(--lt); }
+  .btn-ghost { background:none; border:none; color:var(--mt); font-size:15px; cursor:pointer; padding:2px 6px; }
+  .btn-ghost:hover { color:var(--rd); }
+  .btn-link { background:none; border:none; color:var(--og); font-size:12.5px; font-weight:700; cursor:pointer; padding:0; }
+  .btn-link:hover { text-decoration:underline; }
+  .btn-full { width:100%; justify-content:center; }
+  /* ---- home screen ---- */
+  .eyebrow { color:var(--og); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+  .home-h1 { font-size:34px; font-weight:800; margin:10px 0 14px; }
+  .home-sub { color:var(--mt); font-size:15px; max-width:560px; margin:0 auto 34px; }
+  .mode-card { border-radius:14px; padding:26px; cursor:pointer; transition:transform .15s, box-shadow .15s; text-align:left; }
+  .mode-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.10); }
+  .mode-card.white { background:var(--wh); border:1px solid var(--bd); }
+  .mode-card.black { background:var(--bk); color:#fff; }
+  .mode-card .icon { font-size:26px; margin-bottom:10px; }
+  .mode-card h3 { font-size:17px; margin-bottom:8px; }
+  .mode-card p { font-size:13px; line-height:1.5; opacity:.85; margin:0; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:44px; text-align:center; }
+  .stat-num { font-size:26px; font-weight:800; color:var(--og); }
+  .stat-lbl { font-size:11.5px; color:var(--mt); margin-top:2px; }
+  /* ---- weights panel ---- */
+  .weights-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; }
+  .weights-bar .wt-title { font-weight:700; font-size:14px; }
+  .wt-total { font-weight:700; }
+  .wt-total.ok { color:var(--gn); }
+  .wt-total.bad { color:var(--rd); }
+  .wt-row { display:grid; grid-template-columns:26px 1fr 70px 20px; gap:10px; align-items:center; padding:7px 0; border-bottom:1px solid #f0f0f0; }
+  .wt-row input[type=number] { text-align:right; }
+  /* ---- candidate entry ---- */
+  .cand-card { position:relative; }
+  .cand-label { color:var(--og); font-size:11px; font-weight:800; letter-spacing:.05em; margin-bottom:8px; display:block; }
+  .dropzone { border:2px dashed var(--bd); border-radius:10px; padding:20px 12px; text-align:center; cursor:pointer; transition:.15s; background:var(--lt); }
+  .dropzone:hover { border-color:#bbb; }
+  .dropzone.dragover { border-color:var(--am); background:var(--al); }
+  .dropzone.attached { border-color:var(--gn); background:var(--gl); border-style:solid; }
+  .dropzone p { margin:0; font-size:12.5px; color:var(--mt); }
+  .dropzone.attached p { color:var(--gn); font-weight:600; }
+  .add-cand-card { border:2px dashed var(--bd); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; cursor:pointer; padding:40px 0; color:var(--mt); transition:.15s; }
+  .add-cand-card:hover { border-color:var(--og); color:var(--og); background:var(--ogl); }
+  .add-cand-card .plus { font-size:26px; line-height:1; }
+  /* ---- tabs ---- */
+  .tabs { display:flex; gap:2px; border-bottom:2px solid var(--bd); margin-bottom:22px; flex-wrap:wrap; }
+  .tab-btn { background:none; border:none; color:var(--mt); font-size:13.5px; font-weight:600; padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s; }
+  .tab-btn:hover { color:var(--tx); }
+  .tab-btn.active { color:var(--og); border-bottom-color:var(--og); }
+  /* ---- chips / badges ---- */
+  .chip { display:inline-block; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:700; white-space:nowrap; }
+  .chip-orange { background:var(--ogl); color:var(--chip-orange-text); }
+  .chip-green { background:var(--gl); color:var(--gn); }
+  .chip-red { background:var(--rl); color:var(--rd); }
+  .chip-amber { background:var(--al); color:var(--am); }
+  .chip-gray { background:var(--lt); color:var(--mt); }
+  .chip-black { background:var(--bk); color:#fff; }
+  .score-dots { display:inline-flex; gap:3px; align-items:center; }
+  .score-dot { width:8px; height:8px; border-radius:50%; background:var(--bd); }
+  .score-dot.filled { background:var(--og); }
+  .stitle { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; border-left:3px solid var(--og); padding-left:8px; margin-bottom:14px; }
+  .bullet-list { list-style:none; margin:0; padding:0; }
+  .bullet-list li { padding:8px 10px; border-radius:6px; margin-bottom:6px; font-size:13px; }
+  .bullet-default li { background:var(--lt); }
+  .bullet-green li { background:var(--gl); border-left:3px solid var(--gn); }
+  .bullet-red li { background:var(--rl); border-left:3px solid var(--rd); }
+  .bullet-amber li { background:var(--al); border-left:3px solid var(--am); }
+  table.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.tbl th { text-align:left; color:var(--mt); font-weight:700; padding:7px 10px 7px 0; border-bottom:1px solid var(--bd); font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
+  table.tbl td { padding:8px 10px 8px 0; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+  .rank-1 { color:var(--og); font-weight:800; }
+  .report-block { white-space:pre-wrap; font-size:13px; line-height:1.6; padding:16px; border-radius:10px; }
+  .report-client { border-left:4px solid var(--og); background:var(--ogl); }
+  .report-internal { border-left:4px solid var(--bk); background:var(--lt); position:relative; }
+  .internal-pill { background:var(--rd); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.04em; }
+  .loading-note { color:var(--mt); font-size:13px; padding:20px; text-align:center; }
+  .error-box { background:var(--rl); border:1px solid #fca5a5; color:var(--rd); padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px; white-space:pre-wrap; }
+  ::placeholder { color:#aaa; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; justify-content:flex-end; z-index:50; }
+  .modal-panel { background:var(--lt); width:min(720px,94vw); height:100%; overflow-y:auto; padding:24px; box-shadow:-8px 0 30px rgba(0,0,0,.2); }
+  .subtab-toggle { display:inline-flex; border:1px solid var(--bd); border-radius:8px; overflow:hidden; margin-bottom:16px; }
+  .subtab-toggle button { border:none; background:var(--wh); padding:8px 16px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--mt); }
+  .subtab-toggle button.active { background:var(--bk); color:#fff; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =====================================================================
+   SearchEval V2 — Carter Baldwin Executive Search
+   AI-assisted, evidence-based, weighted candidate evaluation and
+   multi-candidate comparison. Drop resumes/notes/PDFs in, review the
+   AI's scorecard, everything stays editable before it goes to a client.
+
+   NOTE ON ARCHITECTURE: the original SearchEval V2 (claude.ai artifact)
+   called api.anthropic.com directly from the browser with native PDF
+   "document" content blocks. This Cowork sandbox only allows network
+   calls to a short CDN allowlist, so it can't fetch api.anthropic.com —
+   instead all AI calls go through window.cowork.askClaude(prompt, data),
+   and PDFs are read with a hand-written in-browser text extractor
+   (see the "document extraction" section) before being sent as plain text.
+===================================================================== */
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+function escapeAttr(str) {
+  return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function escapeHtml(str) {
+  return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function extFromName(name) {
+  const parts = (name || "").split(".");
+  return parts.length > 1 ? parts.pop().toLowerCase() : "";
+}
+function formatBytes(bytes) {
+  if (!bytes) return "0 KB";
+  const kb = bytes / 1024;
+  if (kb < 1024) return kb.toFixed(0) + " KB";
+  return (kb / 1024).toFixed(1) + " MB";
+}
+
+/* ---------------------- document extraction (PDF + text) ---------------------- */
+/* Reused verbatim from the earlier build — proven against LibreOffice/Word
+   PDFs including ToUnicode-mapped subset fonts. See inline comments. */
+
+const TEXT_EXTS = ["txt", "md", "csv", "json", "log", "rtf"];
+
+async function extractFileText(file) {
+  const ext = extFromName(file.name);
+  if (TEXT_EXTS.includes(ext)) {
+    try { const text = await file.text(); return { text, status: "extracted" }; }
+    catch (e) { return { text: "", status: "error" }; }
+  }
+  if (ext === "pdf") {
+    try {
+      const buf = await file.arrayBuffer();
+      const text = await extractPdfText(buf);
+      const cleaned = (text || "").trim();
+      const junk = (cleaned.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g) || []).length;
+      const ratio = cleaned.length ? 1 - junk / cleaned.length : 0;
+      if (cleaned.length >= 30 && ratio >= 0.9) return { text: cleaned, status: "extracted" };
+      return { text: "", status: "unsupported" };
+    } catch (e) {
+      console.error("PDF extraction failed", e);
+      return { text: "", status: "unsupported" };
+    }
+  }
+  if (ext === "docx" || ext === "pptx") {
+    try {
+      const buf = await file.arrayBuffer();
+      const text = ext === "docx" ? await extractDocxText(buf) : await extractPptxText(buf);
+      const cleaned = (text || "").trim();
+      if (cleaned.length >= 20) return { text: cleaned, status: "extracted" };
+      return { text: "", status: "unsupported" };
+    } catch (e) {
+      console.error((ext === "docx" ? "DOCX" : "PPTX") + " extraction failed", e);
+      return { text: "", status: "unsupported" };
+    }
+  }
+  if (ext === "doc" || ext === "ppt") {
+    // Legacy binary Office formats (pre-2007) aren't ZIP/XML-based and aren't supported —
+    // fall through to the manual-paste box rather than trying to parse them.
+    return { text: "", status: "unsupported" };
+  }
+  return { text: "", status: "unsupported" };
+}
+
+async function inflateBytes(bytes) {
+  const ds = new DecompressionStream("deflate");
+  const stream = new Blob([bytes]).stream().pipeThrough(ds);
+  const ab = await new Response(stream).arrayBuffer();
+  return new Uint8Array(ab);
+}
+async function inflateRawBytes(bytes) {
+  const ds = new DecompressionStream("deflate-raw");
+  const stream = new Blob([bytes]).stream().pipeThrough(ds);
+  const ab = await new Response(stream).arrayBuffer();
+  return new Uint8Array(ab);
+}
+
+/* ---------------------- minimal ZIP reader (for .docx / .pptx) ----------------------
+   .docx and .pptx are ZIP archives of XML files. No zip library is available in this
+   sandbox, so this hand-parses the ZIP central directory (standard PKZIP format) and
+   inflates each entry's raw DEFLATE stream (method 8) via DecompressionStream("deflate-raw") —
+   distinct from the PDF path above, which needs zlib-wrapped "deflate", not raw. */
+function readZipCentralDirectory(bytes) {
+  const n = bytes.length;
+  const searchStart = Math.max(0, n - 65557); // EOCD + max 64KB comment
+  let eocd = -1;
+  for (let i = n - 22; i >= searchStart; i--) {
+    if (bytes[i] === 0x50 && bytes[i + 1] === 0x4b && bytes[i + 2] === 0x05 && bytes[i + 3] === 0x06) { eocd = i; break; }
+  }
+  if (eocd === -1) throw new Error("Not a valid Office document (zip signature not found)");
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const count = dv.getUint16(eocd + 10, true);
+  let cdOffset = dv.getUint32(eocd + 16, true);
+  const entries = [];
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(cdOffset, true) !== 0x02014b50) break;
+    const method = dv.getUint16(cdOffset + 10, true);
+    const compSize = dv.getUint32(cdOffset + 20, true);
+    const nameLen = dv.getUint16(cdOffset + 28, true);
+    const extraLen = dv.getUint16(cdOffset + 30, true);
+    const commentLen = dv.getUint16(cdOffset + 32, true);
+    const localHeaderOffset = dv.getUint32(cdOffset + 42, true);
+    const name = new TextDecoder("utf-8").decode(bytes.subarray(cdOffset + 46, cdOffset + 46 + nameLen));
+    entries.push({ name, method, compSize, localHeaderOffset });
+    cdOffset += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+async function readZipEntryData(bytes, entry) {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const lp = entry.localHeaderOffset;
+  if (dv.getUint32(lp, true) !== 0x04034b50) throw new Error("Bad zip local file header");
+  const nameLen = dv.getUint16(lp + 26, true);
+  const extraLen = dv.getUint16(lp + 28, true);
+  const dataStart = lp + 30 + nameLen + extraLen;
+  const raw = bytes.subarray(dataStart, dataStart + entry.compSize);
+  if (entry.method === 0) return raw;
+  if (entry.method === 8) return await inflateRawBytes(raw);
+  throw new Error("Unsupported zip compression method " + entry.method);
+}
+function decodeXmlEntities(s) {
+  return s
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&amp;/g, "&");
+}
+// Word (w:) and PowerPoint (a:) XML both wrap all visible text in <TAG:t> runs, with
+// <TAG:p> as the paragraph boundary — so stripping tags after marking paragraph breaks
+// recovers readable text without needing a full XML parser.
+function officeXmlToText(xml, nsPrefix) {
+  let s = xml;
+  s = s.replace(new RegExp("</" + nsPrefix + ":p>", "g"), "\n");
+  s = s.replace(new RegExp("<" + nsPrefix + ":tab\\s*/>", "g"), "\t");
+  s = s.replace(new RegExp("<" + nsPrefix + ":br\\s*/?>", "g"), "\n");
+  s = s.replace(new RegExp("<" + nsPrefix + ":cr\\s*/?>", "g"), "\n");
+  s = s.replace(/<[^>]+>/g, "");
+  s = decodeXmlEntities(s);
+  return s.split("\n").map((line) => line.replace(/[ \t]+/g, " ").trim()).filter(Boolean).join("\n");
+}
+async function extractDocxText(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const entries = readZipCentralDirectory(bytes);
+  const docEntry = entries.find((e) => e.name === "word/document.xml");
+  if (!docEntry) return "";
+  const raw = await readZipEntryData(bytes, docEntry);
+  const xml = new TextDecoder("utf-8").decode(raw);
+  return officeXmlToText(xml, "w");
+}
+async function extractPptxText(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const entries = readZipCentralDirectory(bytes);
+  const slideEntries = entries
+    .filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e.name))
+    .map((e) => Object.assign({}, e, { num: parseInt(e.name.match(/slide(\d+)\.xml$/)[1], 10) }))
+    .sort((a, b) => a.num - b.num);
+  const parts = [];
+  for (const entry of slideEntries) {
+    const raw = await readZipEntryData(bytes, entry);
+    const xml = new TextDecoder("utf-8").decode(raw);
+    const text = officeXmlToText(xml, "a");
+    if (text) parts.push("--- Slide " + entry.num + " ---\n" + text);
+  }
+  return parts.join("\n\n");
+}
+function decodePdfLiteralString(s) {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch !== "\\") { out += ch; continue; }
+    const next = s[i + 1];
+    if (next === "n") { out += "\n"; i++; }
+    else if (next === "r") { out += "\r"; i++; }
+    else if (next === "t") { out += "\t"; i++; }
+    else if (next === "b" || next === "f") { i++; }
+    else if (next === "(" || next === ")" || next === "\\") { out += next; i++; }
+    else if (next === "\n") { i++; }
+    else if (next === "\r") { i++; if (s[i + 1] === "\n") i++; }
+    else if (next >= "0" && next <= "7") {
+      let oct = next, j = i + 1, k = 0;
+      while (k < 2 && s[j + 1] >= "0" && s[j + 1] <= "7") { oct += s[j + 1]; j++; k++; }
+      out += String.fromCharCode(parseInt(oct, 8) & 0xff);
+      i = j;
+    } else { out += next || ""; i++; }
+  }
+  return out;
+}
+function decodeWin1252Bytes(rawByteString) {
+  const bytes = new Uint8Array(rawByteString.length);
+  for (let i = 0; i < rawByteString.length; i++) bytes[i] = rawByteString.charCodeAt(i) & 0xff;
+  return new TextDecoder("windows-1252").decode(bytes);
+}
+function hexToUtf16String(hex) {
+  let s = "";
+  for (let i = 0; i + 4 <= hex.length; i += 4) s += String.fromCharCode(parseInt(hex.slice(i, i + 4), 16));
+  return s;
+}
+function decodeRun(rawByteString, fontMap) {
+  if (!rawByteString) return "";
+  if (fontMap && fontMap.map && fontMap.map.size) {
+    const step = fontMap.codeBytes || 1;
+    let out = "";
+    for (let i = 0; i + step <= rawByteString.length; i += step) {
+      let code = 0;
+      for (let k = 0; k < step; k++) code = (code << 8) | (rawByteString.charCodeAt(i + k) & 0xff);
+      const mapped = fontMap.map.get(code);
+      if (mapped !== undefined) out += mapped;
+    }
+    return out;
+  }
+  return decodeWin1252Bytes(rawByteString);
+}
+function parseToUnicodeCMap(cmapText) {
+  let codeBytes = 1;
+  const csMatch = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(cmapText);
+  if (csMatch) {
+    const firstPair = /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/.exec(csMatch[1]);
+    if (firstPair) codeBytes = Math.max(1, Math.round(firstPair[1].length / 2));
+  }
+  const map = new Map();
+  let bm;
+  const bfCharBlock = /beginbfchar([\s\S]*?)endbfchar/g;
+  while ((bm = bfCharBlock.exec(cmapText))) {
+    const pairRe = /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g;
+    let pm;
+    while ((pm = pairRe.exec(bm[1]))) map.set(parseInt(pm[1], 16), hexToUtf16String(pm[2]));
+  }
+  let rm;
+  const bfRangeBlock = /beginbfrange([\s\S]*?)endbfrange/g;
+  while ((rm = bfRangeBlock.exec(cmapText))) {
+    const rangeRe = /<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*(?:<([0-9a-fA-F]+)>|\[([^\]]*)\])/g;
+    let x;
+    while ((x = rangeRe.exec(rm[1]))) {
+      const lo = parseInt(x[1], 16), hi = parseInt(x[2], 16);
+      if (x[3] !== undefined) {
+        const dstLen = x[3].length, dstBase = parseInt(x[3], 16);
+        for (let code = lo; code <= hi; code++) map.set(code, hexToUtf16String((dstBase + (code - lo)).toString(16).padStart(dstLen, "0")));
+      } else if (x[4] !== undefined) {
+        const arr = x[4].match(/<([0-9a-fA-F]+)>/g) || [];
+        for (let k = 0; k < arr.length && lo + k <= hi; k++) map.set(lo + k, hexToUtf16String(arr[k].slice(1, -1)));
+      }
+    }
+  }
+  return { codeBytes, map };
+}
+function extractTextOperators(streamText, fontMaps) {
+  let result = "";
+  let i = 0;
+  let inArray = false;
+  let currentFontRes = null;
+  let lastNameToken = null;
+  const n = streamText.length;
+  const endsWithSpace = () => /\s$/.test(result);
+  const activeMap = () => (fontMaps ? fontMaps[currentFontRes] : null) || null;
+  while (i < n) {
+    const ch = streamText[i];
+    if (ch === "[") { inArray = true; i++; continue; }
+    if (ch === "]") { inArray = false; i++; continue; }
+    if (ch === "/") {
+      let j = i + 1;
+      while (j < n && /[A-Za-z0-9.+_-]/.test(streamText[j])) j++;
+      lastNameToken = streamText.slice(i + 1, j);
+      i = j;
+      continue;
+    }
+    if (ch === "(") {
+      let depth = 1, j = i + 1, buf = "";
+      while (j < n && depth > 0) {
+        const c = streamText[j];
+        if (c === "\\") { buf += c + (streamText[j + 1] || ""); j += 2; continue; }
+        if (c === "(") depth++;
+        if (c === ")") { depth--; if (depth === 0) { j++; break; } }
+        buf += c; j++;
+      }
+      result += decodeRun(decodePdfLiteralString(buf), activeMap());
+      i = j;
+      continue;
+    }
+    if (ch === "<" && streamText[i + 1] === "<") {
+      let depth = 1, j = i + 2;
+      while (j < n && depth > 0) {
+        if (streamText[j] === "<" && streamText[j + 1] === "<") { depth++; j += 2; continue; }
+        if (streamText[j] === ">" && streamText[j + 1] === ">") { depth--; j += 2; continue; }
+        j++;
+      }
+      i = j;
+      continue;
+    }
+    if (ch === "<") {
+      const close = streamText.indexOf(">", i + 1);
+      if (close === -1) { i++; continue; }
+      const hex = streamText.slice(i + 1, close).replace(/\s+/g, "");
+      let buf = "";
+      for (let h = 0; h < hex.length - 1; h += 2) buf += String.fromCharCode(parseInt(hex.slice(h, h + 2), 16));
+      result += decodeRun(buf, activeMap());
+      i = close + 1;
+      continue;
+    }
+    if (inArray && /[-.\d]/.test(ch)) {
+      let j = i;
+      while (j < n && /[-.\d]/.test(streamText[j])) j++;
+      const num = parseFloat(streamText.slice(i, j));
+      if (!Number.isNaN(num) && num < -80 && result.length && !endsWithSpace()) result += " ";
+      i = j;
+      continue;
+    }
+    const two = streamText.slice(i, i + 2);
+    if (two === "Tf") { currentFontRes = lastNameToken; i += 2; continue; }
+    if (two === "TJ" || two === "Tj") { if (!endsWithSpace()) result += " "; i += 2; continue; }
+    if (two === "T*" || two === "Td" || two === "TD") { result += "\n"; i += 2; continue; }
+    i++;
+  }
+  return result.replace(/[ \t]+/g, " ").replace(/\n{2,}/g, "\n").trim();
+}
+function scanStreams(latin1) {
+  const streams = [];
+  let searchFrom = 0;
+  while (true) {
+    const streamIdx = latin1.indexOf("stream", searchFrom);
+    if (streamIdx === -1) break;
+    const precededByEnd = latin1.slice(Math.max(0, streamIdx - 3), streamIdx) === "end";
+    if (precededByEnd) { searchFrom = streamIdx + 6; continue; }
+    let dataStart = streamIdx + 6;
+    if (latin1[dataStart] === "\r") dataStart++;
+    if (latin1[dataStart] === "\n") dataStart++;
+    const endIdx = latin1.indexOf("endstream", dataStart);
+    if (endIdx === -1) break;
+    let dataEnd = endIdx;
+    if (latin1[dataEnd - 1] === "\n") dataEnd--;
+    if (latin1[dataEnd - 1] === "\r") dataEnd--;
+    const dictText = latin1.slice(Math.max(0, streamIdx - 500), streamIdx);
+    let objNum = null;
+    const objRe = /(\d+)\s+\d+\s+obj/g;
+    let om, last = null;
+    while ((om = objRe.exec(dictText))) last = om;
+    if (last) objNum = parseInt(last[1], 10);
+    streams.push({ dataStart, dataEnd, isFlate: /FlateDecode/.test(dictText), objNum });
+    searchFrom = endIdx + 9;
+  }
+  return streams;
+}
+function scanPlainObjectDicts(latin1) {
+  const dicts = new Map();
+  const objRe = /(\d+)\s+\d+\s+obj/g;
+  const headers = [];
+  let m;
+  while ((m = objRe.exec(latin1))) headers.push({ num: parseInt(m[1], 10), end: m.index + m[0].length });
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i];
+    const nextStart = i + 1 < headers.length ? headers[i + 1].end : latin1.length;
+    const streamPos = latin1.indexOf("stream", h.end);
+    const endobjPos = latin1.indexOf("endobj", h.end);
+    let stop = nextStart;
+    if (endobjPos !== -1 && endobjPos < stop) stop = endobjPos;
+    if (streamPos !== -1 && streamPos < stop) stop = streamPos;
+    dicts.set(h.num, latin1.slice(h.end, Math.max(h.end, stop)));
+  }
+  return dicts;
+}
+async function extractPdfText(arrayBuf) {
+  const bytes = new Uint8Array(arrayBuf);
+  const latin1 = new TextDecoder("latin1").decode(bytes);
+  const canInflate = typeof DecompressionStream !== "undefined";
+  const streams = scanStreams(latin1);
+  const dicts = scanPlainObjectDicts(latin1);
+  const textCache = new Map();
+  async function getStreamText(objNum) {
+    if (textCache.has(objNum)) return textCache.get(objNum);
+    const s = streams.find((x) => x.objNum === objNum);
+    let text = null;
+    if (s) {
+      const raw = bytes.subarray(s.dataStart, s.dataEnd);
+      let outBytes = null;
+      if (s.isFlate && canInflate) { try { outBytes = await inflateBytes(raw); } catch (e) { outBytes = null; } }
+      else if (!s.isFlate) outBytes = raw;
+      if (outBytes) text = new TextDecoder("latin1").decode(outBytes);
+    }
+    textCache.set(objNum, text);
+    return text;
+  }
+  const fontNameToObjNum = new Map();
+  const parseFontEntries = (body) => {
+    const entryRe = /\/([A-Za-z0-9]+)\s+(\d+)\s+0\s+R/g;
+    let em;
+    while ((em = entryRe.exec(body))) fontNameToObjNum.set(em[1], parseInt(em[2], 10));
+  };
+  const fontRefRe = /\/Font\s*(?:<<([\s\S]*?)>>|(\d+)\s+0\s+R)/g;
+  let fdm;
+  while ((fdm = fontRefRe.exec(latin1))) {
+    if (fdm[1] !== undefined) parseFontEntries(fdm[1]);
+    else if (fdm[2] !== undefined) parseFontEntries(dicts.get(parseInt(fdm[2], 10)) || "");
+  }
+  const fontMapCache = new Map();
+  async function resolveFontMap(resName) {
+    const fontObjNum = fontNameToObjNum.get(resName);
+    if (fontObjNum === undefined) return null;
+    if (fontMapCache.has(fontObjNum)) return fontMapCache.get(fontObjNum);
+    const dictText = dicts.get(fontObjNum) || "";
+    const tuMatch = /\/ToUnicode\s+(\d+)\s+0\s+R/.exec(dictText);
+    let result = null;
+    if (tuMatch) {
+      const cmapText = await getStreamText(parseInt(tuMatch[1], 10));
+      if (cmapText) result = parseToUnicodeCMap(cmapText);
+    }
+    fontMapCache.set(fontObjNum, result);
+    return result;
+  }
+  const fontMaps = {};
+  for (const name of fontNameToObjNum.keys()) fontMaps[name] = await resolveFontMap(name);
+  const chunks = [];
+  for (const s of streams) {
+    let text = s.objNum !== null ? await getStreamText(s.objNum) : null;
+    if (text === null) {
+      const raw = bytes.subarray(s.dataStart, s.dataEnd);
+      if (s.isFlate && canInflate) { try { text = new TextDecoder("latin1").decode(await inflateBytes(raw)); } catch (e) { text = null; } }
+      else if (!s.isFlate) text = new TextDecoder("latin1").decode(raw);
+    }
+    if (!text || !/\bBT\b/.test(text)) continue;
+    const extracted = extractTextOperators(text, fontMaps);
+    if (extracted) chunks.push(extracted);
+  }
+  return chunks.join("\n");
+}
+
+/* ---------------------- Carter Baldwin scoring categories ---------------------- */
+
+const CATEGORIES = [
+  { key: "functional", label: "Role-Specific Functional Experience", weight: 18, rubric: "Direct experience in the role's main function (FP&A, accounting, operations, sales leadership, HR, technology, supply chain, legal, general management, etc.)." },
+  { key: "industry", label: "Industry Relevance", weight: 10, rubric: "How closely the candidate's industry background matches the client's industry or business model." },
+  { key: "stage", label: "Company Stage and Ownership Model Alignment", weight: 8, rubric: "Fit with the company's size, stage, ownership structure (public/private/PE-backed/founder-led/startup/turnaround), and operating environment." },
+  { key: "scope", label: "Scope and Scale of Responsibility", weight: 12, rubric: "Whether the candidate has operated at a similar or larger level of responsibility: revenue/budget, P&L, team size, geographic scope, board exposure." },
+  { key: "leadership", label: "Leadership Responsibility", weight: 8, rubric: "Measurable leadership responsibility only (direct/indirect reports, teams built, departments led) — never leadership style or presence." },
+  { key: "impact", label: "Quantifiable Business Impact", weight: 12, rubric: "Documented, numeric results: revenue growth, EBITDA/margin improvement, cost savings, turnaround results, M&A integration. Score conservatively without numbers." },
+  { key: "technical", label: "Technical, Systems, or Regulatory Expertise", weight: 8, rubric: "Role-relevant technical knowledge, tools, systems, platforms, certifications, or regulatory experience." },
+  { key: "progression", label: "Career Progression and Stability", weight: 7, rubric: "Career trajectory and tenure patterns — promotions, increasing responsibility, consistency. Never infer age or personal circumstances." },
+  { key: "education", label: "Education and Credentials Alignment", weight: 5, rubric: "Whether the candidate meets required or preferred education and credential expectations." },
+  { key: "location", label: "Location, Travel, and Relocation Alignment", weight: 5, rubric: "Logistical alignment with the role — current location, stated relocation/travel willingness or limits." },
+  { key: "compensation", label: "Compensation Alignment", weight: 5, rubric: "Whether current compensation, target compensation, and expectations align with the role's range, if provided." },
+  { key: "availability", label: "Availability and Process Alignment", weight: 2, rubric: "Whether timing and search status (notice period, active/passive, competing processes) align with the client's process." },
+];
+
+const STABS = ["Overview", "Scorecard", "Requirements", "Analysis", "Strategy", "Action"];
+const CTABS = ["Rankings", "Category Grid", "Requirements", "Head-to-Head", "Insights", "Recommendations", "Reports"];
+
+const FIT_OPTIONS = ["Strong fit", "Moderate fit", "Possible fit, needs more information", "Weak fit", "Not enough information to evaluate"];
+const RECOMMENDATION_OPTIONS = ["Advance to next round", "Advance, but clarify specific concerns first", "Keep warm but do not prioritize", "Do not advance", "Not enough information"];
+const RISK_OPTIONS = ["Low", "Moderate", "High", "Critical", "Unknown"];
+const STATUS_OPTIONS = ["Meets", "Partially meets", "Does not meet", "Unknown"];
+
+const METHODOLOGY_RULES = [
+  "Do not invent experience, credentials, compensation, education, motivations, titles, dates, team size, revenue scope, P&L ownership, certifications, or achievements.",
+  "If something is not provided, write \"Not provided\" or \"Needs confirmation.\" Separate confirmed evidence from inferred evidence.",
+  "Do not evaluate protected characteristics: age, race, religion, disability, family status, gender, marital status, pregnancy, sexual orientation, or national origin. Do not infer these from graduation dates, career gaps, names, locations, or other demographic clues.",
+  "Do not use soft-skill scoring categories. Do not score personality, likability, charisma, communication style, \"culture fit,\" executive presence, or leadership style unless tied to measurable job-related evidence.",
+  "Do not punish a candidate for missing information — use N/A when evidence is truly absent. Do not give a high score without clear evidence. Score conservatively when evidence is mixed.",
+  "Do not overstate fit or use vague praise. Do not over-score candidates simply because their materials are longer or more detailed.",
+];
+
+/* ---------------------- data model ---------------------- */
+
+function newCandidate(n) {
+  return { id: uid(), name: "", notes: "", pdf: null, dragOver: false, deepDive: null, deepDiveLoading: false, deepDiveError: "" };
+}
+
+let state = {
+  mode: "home", // home | single | compare
+  single: {
+    roleSpec: "", roleDoc: null, roleDocDragOver: false, candidateInfo: "", pdf: null, dragOver: false,
+    loading: false, error: "", result: null, tab: 0,
+  },
+  compare: {
+    roleSpec: "", roleDoc: null, roleDocDragOver: false,
+    weights: CATEGORIES.map((c) => ({ ...c })),
+    criticals: [],
+    weightsOpen: false,
+    candidates: [newCandidate(1), newCandidate(2)],
+    loading: false, error: "", result: null, tab: 0,
+    deepDiveOpenId: null, progress: null, _canonicalReq: null,
+  },
+};
+
+function weightsTotal(weights) { return weights.reduce((s, c) => s + Number(c.weight || 0), 0); }
+function candidateCountWithContent(candidates) { return candidates.filter((c) => (c.notes && c.notes.trim()) || c.pdf).length; }
+
+/* ---------------------- prompt size budget ----------------------
+   window.cowork.askClaude validates its "prompt" argument and rejects
+   the call outright (a bridge-level validation error, not a normal AI
+   error) if it's too large. The exact limit isn't documented and has
+   proven to be lower than initially assumed, so instead of one giant
+   "compare all N candidates" call (which scales with N and will always
+   eventually hit the ceiling), Compare mode now runs ONE small, bounded
+   AI call PER candidate (see runCompare) — this scales to any number of
+   candidates because per-call size never depends on N. A final, tiny
+   synthesis call (compact summaries only, not raw resumes) adds the
+   cross-candidate narrative. Ranking/tiers/category-grid are computed
+   locally in JS from the per-candidate results — no AI needed for those.
+   This constant remains as a hard safety net on any individual call. */
+const MAX_PROMPT_CHARS = 20000;
+const MIN_CANDIDATE_CHARS = 500;
+function truncateNote(original, kept) {
+  return original.length > kept ? "\n[...truncated for length — " + (original.length - kept) + " more characters omitted...]" : "";
+}
+function capText(text, maxLen) {
+  if (!text || text.length <= maxLen) return text || "";
+  return text.slice(0, maxLen) + truncateNote(text, maxLen);
+}
+
+/* ---------------------- AI plumbing ---------------------- */
+
+function extractAskClaudeText(res) {
+  if (typeof res === "string") return res;
+  if (res == null) return "";
+  if (typeof res.text === "string") return res.text;
+  if (Array.isArray(res.content)) return res.content.map((c) => c.text || "").join("\n");
+  if (typeof res.content === "string") return res.content;
+  try { return JSON.stringify(res); } catch (e) { return String(res); }
+}
+function parseJsonLoose(raw) {
+  if (!raw) return null;
+  let s = raw.trim();
+  s = s.replace(/^```(json)?/i, "").replace(/```$/, "").trim();
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if (first === -1 || last === -1) return null;
+  s = s.slice(first, last + 1);
+  try { return JSON.parse(s); } catch (e) { return null; }
+}
+function combineCandidateText(c) {
+  const parts = [];
+  if (c.notes && c.notes.trim()) parts.push(c.notes.trim());
+  if (c.pdf && c.pdf.text) parts.push("### " + c.pdf.name + "\n" + c.pdf.text);
+  return parts.join("\n\n");
+}
+// Role spec can come from pasted text, an uploaded PDF/Word/PowerPoint, or both — combine them
+// the same way candidate materials are combined, so either input alone (or together) works.
+function combineRoleSpecText(obj) {
+  const parts = [];
+  if (obj.roleSpec && obj.roleSpec.trim()) parts.push(obj.roleSpec.trim());
+  if (obj.roleDoc && obj.roleDoc.text) parts.push("### " + obj.roleDoc.name + "\n" + obj.roleDoc.text);
+  return parts.join("\n\n");
+}
+function methodologyBlock() {
+  return "CARTER BALDWIN EVALUATION RULES (must follow exactly):\n" + METHODOLOGY_RULES.map((r) => "- " + r).join("\n");
+}
+function weightsBlock(weights, criticals) {
+  const total = weightsTotal(weights);
+  const lines = weights.map((c) => "- " + c.key + " \"" + c.label + "\" — weight " + c.weight.toFixed(1) + "%" + (criticals.includes(c.key) ? " [CRITICAL]" : "") + ": " + c.rubric);
+  return "SCORING CATEGORIES (weights sum to " + total.toFixed(1) + "%; categories marked [CRITICAL] were flagged by the consultant as must-meet — failing one should be called out explicitly, e.g. via criticalGaps):\n" + lines.join("\n");
+}
+
+function buildSinglePrompt(roleSpec, candidateText, weights, criticals, canonicalReq) {
+  const schema = {
+    candidateSnapshot: { name: "", title: "", company: "", location: "", industry: "", functionalExpertise: "", yearsExperience: "", education: "", certifications: "", currentComp: "", targetComp: "", mobility: "", processStatus: "", sourceMaterials: "" },
+    roleEvaluatedFor: "2-4 sentence summary of the role, function, level, industry, company type, ownership model, and key objectives",
+    evaluationStandard: "Full client role specification|Partial role information|Assumed requirements (no full spec provided)|Candidate materials only",
+    weightedScore: { raw: 0, weighted: 0, weightedPercentage: 0, categoriesScored: 0, categoriesNA: 0, interpretation: "Very strong measurable alignment|Strong measurable alignment|Moderate measurable alignment|Limited measurable alignment|Weak measurable alignment|Not enough information", overallConfidenceLevel: "High|Medium|Low" },
+    overallFitRating: { rating: FIT_OPTIONS.join("|"), explanation: "4-6 full sentences of prose using measurable evidence — a real written assessment, not a fragment" },
+    scorecard: weights.map((c) => ({ category: c.key, label: c.label, weight: c.weight, score: "1-5 or N/A", weightedContribution: 0, evidence: "1-2 full sentences citing the specific evidence", gap: "1 full sentence describing the gap, or empty if none", confidence: "High|Medium|Low" })),
+    mustHaveRequirements: [{ requirement: "", source: "Client-provided|Assumed", evidence: "1 full sentence citing specific evidence", gapOrConcern: "1 full sentence, or empty if none", status: STATUS_OPTIONS.join("|"), confidenceLevel: "High|Medium|Low" }],
+    niceToHaveRequirements: [{ requirement: "", source: "Client-provided|Assumed", evidence: "1 full sentence citing specific evidence", gapOrConcern: "1 full sentence, or empty if none", status: STATUS_OPTIONS.join("|"), confidenceLevel: "High|Medium|Low" }],
+    keyStrengthsSummary: "3-5 sentence narrative paragraph, written as flowing prose (NOT a bulleted list), covering the candidate's most relevant strengths for this specific role, each grounded in specific evidence from their background",
+    keyConcernsSummary: {
+      confirmed: "2-4 sentence narrative paragraph, written as flowing prose (NOT a list), covering concerns clearly supported by evidence in the materials — empty string if there truly are none",
+      possible: "2-3 sentence narrative paragraph, written as flowing prose (NOT a list), covering possible or inferred concerns that would need clarification — empty string if there truly are none",
+    },
+    informationGaps: ["one full sentence per gap — specific and actionable, not a fragment"],
+    candidateMotivationSummary: "2-4 sentence narrative paragraph, written as flowing prose, distinguishing what's confirmed vs. inferred vs. still unknown about why this candidate would consider this move",
+    howToPositionOpportunity: { emphasize: "1-2 full sentences", avoid: "1-2 full sentences", objections: "1-2 full sentences", confirmFirst: "1-2 full sentences" },
+    clientReadySummary: "5-8 sentence polished client-facing narrative (1-2 real paragraphs, not a blurb) following the arc: [Name] is a [title/function] with experience in [companies/industries]. Their background appears most aligned with [role requirements], particularly [strengths, explained with evidence]. Areas to further explore include [gaps, explained]. Based on the available information, [Name] is a [strong/moderate/possible/weak] fit for the role, because [reasoning].",
+    internalConsultantNotes: "2-3 substantive paragraphs of direct internal notes: reasons to advance/pause, risk areas, and follow-ups, written as real prose a consultant would actually want to read",
+    recommendation: { choice: RECOMMENDATION_OPTIONS.join("|"), explanation: "1-2 full sentences" },
+    nextQuestions: ["8-12 high-quality follow-up questions covering scope, team size, revenue, budget, systems, compensation, location, travel, timeline, interest, reason for leaving, restrictions"],
+    qualityCheck: { assumptions: "", needsVerification: "", categoriesNA: 0, weightsCustomized: false, legalLanguageAvoided: true, status: "Client-ready|Internal-only", finalConfidenceLevel: "High|Medium|Low" },
+  };
+  const canonicalBlock = (canonicalReq && ((canonicalReq.mustHave || []).length || (canonicalReq.niceToHave || []).length))
+    ? "CANONICAL REQUIREMENTS — use this EXACT wording for each \"requirement\" field so results are comparable across candidates in this search:\nMust-have: " +
+      (canonicalReq.mustHave || []).join(" | ") + "\nNice-to-have: " + (canonicalReq.niceToHave || []).join(" | ") + "\n\n"
+    : "";
+  const buildWith = (roleCap, candCap) => [
+    "You are SearchEval, an executive search evaluation assistant for Carter Baldwin Executive Search. Produce a full, measurable, evidence-based candidate scorecard.",
+    methodologyBlock(),
+    "",
+    "WEIGHTED SCORING: if a category is N/A, exclude it from the weighted score and redistribute its weight proportionally across the remaining scored categories. State in qualityCheck if weights were customized. Interpretation bands: 4.50-5.00 Very strong, 3.75-4.49 Strong, 3.00-3.74 Moderate, 2.25-2.99 Limited, 1.00-2.24 Weak, insufficient scored categories = Not enough information.",
+    "WRITING STYLE: wherever the schema calls for a narrative/summary field, write real, substantive prose in full sentences — never compress analysis into clipped bullet fragments or keyword lists. This is a real work product a consultant will act on, not a checklist.",
+    "",
+    weightsBlock(weights, criticals),
+    "",
+    canonicalBlock +
+    "ROLE SPECIFICATION (may be partial or absent):",
+    '"""',
+    capText(roleSpec || "Not provided — evaluate against general expectations for this type of role and note that in evaluationStandard.", roleCap),
+    '"""',
+    "",
+    "CANDIDATE SOURCE MATERIAL (resume / LinkedIn / notes, verbatim, may be partial or messy):",
+    '"""',
+    capText(candidateText, candCap),
+    '"""',
+    "",
+    "Respond with ONLY a single JSON object — no markdown fences, no commentary — matching exactly this shape (use \"\" / [] / 0 for anything not evidenced, never fabricate):",
+    JSON.stringify(schema),
+  ].join("\n");
+  // Build with reasonable caps first, then shrink further if the bridge's size validation would reject it.
+  let prompt = buildWith(3000, 10000);
+  if (prompt.length > MAX_PROMPT_CHARS) prompt = buildWith(1500, 5000);
+  if (prompt.length > MAX_PROMPT_CHARS) prompt = buildWith(600, Math.max(MIN_CANDIDATE_CHARS, MAX_PROMPT_CHARS - 6000));
+  return prompt;
+}
+
+/* Compare mode no longer sends one giant "all N candidates at once" prompt — that call's size
+   scaled with N and always eventually hit the bridge's size validation. Instead: */
+
+// Step 0 (tiny, once per search): pull a canonical requirements list from the role spec so every
+// candidate is scored against identical wording, keeping the Requirements matrix consistent.
+function buildRequirementsExtractionPrompt(roleSpec) {
+  return [
+    "You are helping set up a multi-candidate executive search comparison for Carter Baldwin Executive Search.",
+    "Read the role specification below and extract a short, canonical requirements list that will be used, verbatim, when scoring EVERY candidate in this search — so wording must be reusable and specific, not vague.",
+    "Return ONLY a single JSON object, no markdown fences, no commentary, matching exactly: " + JSON.stringify({ mustHave: ["<=12 words each, 4-8 items"], niceToHave: ["<=12 words each, 2-5 items"] }),
+    "If the specification is thin or missing, infer reasonable general requirements for this type of role instead of leaving the lists empty.",
+    "",
+    "ROLE SPECIFICATION:",
+    '"""',
+    capText(roleSpec || "Not provided.", 6000),
+    '"""',
+  ].join("\n");
+}
+
+// Step 2 (tiny, once per search, size independent of candidate count): cross-candidate narrative
+// only — head-to-head, archetypes, trade-offs, and the two prose reports. Every candidate has
+// ALREADY been fully scored independently in Step 1, so this call only ever sees compact
+// summaries (name/score/fit/top strengths/concerns), never raw resumes — its size barely grows
+// even with dozens of candidates.
+function buildSynthesisPrompt(roleSpec, weights, criticals, summaries) {
+  const schema = {
+    headToHeadComparisons: [{ candidateA: "", candidateB: "", comparisonNarrative: "3-5 sentence narrative, written as flowing prose, directly comparing A and B — where each is stronger, where they're comparable, and each one's main risk", betterFit: "A|B|Even", recommendedNextStep: "1 full sentence" }],
+    archetypes: [{ label: "", candidateName: "", rationale: "1 full sentence" }],
+    tradeoffs: [{ title: "", narrative: "2-4 sentence narrative, written as flowing prose, describing the tradeoff between two candidates and the situation in which each would be favored", candidateA: "", candidateB: "" }],
+    clientReadySummary: "150-220 words, 2-3 real paragraphs of client-facing prose comparing the shortlist — substantive, not a blurb",
+    internalNotes: "150-220 words, 2-3 real paragraphs of internal prose — tradeoffs and risk flags across candidates, substantive and direct",
+  };
+  return [
+    "You are SearchEval for Carter Baldwin Executive Search. Every candidate below has ALREADY been fully evaluated and scored independently against the same role and the same weights — do not re-score anyone here.",
+    methodologyBlock(),
+    "Your only job now is the cross-candidate narrative: pick the most decision-relevant head-to-head pairs (closest competitors or the top few candidates) — up to 6 pairs total, never all combinations.",
+    "WRITING STYLE: write real, substantive prose in full sentences wherever the schema calls for a narrative — never compress the comparison into clipped bullet fragments or keyword lists. This is a real work product a consultant will act on.",
+    "",
+    weightsBlock(weights, criticals),
+    "",
+    "ROLE SPECIFICATION (may be partial or absent):",
+    '"""',
+    capText(roleSpec || "Not provided.", 3000),
+    '"""',
+    "",
+    "CANDIDATE SUMMARIES (already scored, ordered by weighted score, highest first):",
+    JSON.stringify(summaries),
+    "",
+    "Respond with ONLY a single JSON object — no markdown fences, no commentary — matching exactly this shape:",
+    JSON.stringify(schema),
+  ].join("\n");
+}
+
+// Local aggregation (no AI call) — turns N independent single-candidate evaluations into the
+// same masterRanking/candidates/categoryComparisons/tiers/shortlist shape the Compare UI already
+// renders. Scales to any N since it's just JS over already-fetched JSON.
+function tierForFit(fit) {
+  if (fit === "Strong fit") return "tier1";
+  if (fit === "Moderate fit" || fit === "Possible fit, needs more information") return "tier2";
+  if (fit === "Weak fit") return "tier3";
+  return "tier4";
+}
+// keyStrengthsSummary/keyConcernsSummary are now narrative paragraphs, not arrays — split into
+// sentences where we need a "first strength" / "first concern" style short excerpt.
+function splitSentences(text) {
+  if (!text || !text.trim()) return [];
+  return text.trim().split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+}
+function buildCompareResultLocally(successes, weights, criticals, failedCount) {
+  const ranked = successes.slice().sort((a, b) => {
+    const av = a.json.weightedScore && typeof a.json.weightedScore.weighted === "number" ? a.json.weightedScore.weighted : -1;
+    const bv = b.json.weightedScore && typeof b.json.weightedScore.weighted === "number" ? b.json.weightedScore.weighted : -1;
+    return bv - av;
+  });
+  const masterRanking = ranked.map((r, i) => {
+    const e = r.json;
+    const name = (e.candidateSnapshot && e.candidateSnapshot.name) || r.cand.name || ("Candidate " + (i + 1));
+    const ws = e.weightedScore || {};
+    const scorecard = e.scorecard || [];
+    const gapRows = scorecard.filter((row) => criticals.includes(row.category) && (row.score === "N/A" || Number(row.score) < 3));
+    const criticalGaps = gapRows.map((row) => row.label + (row.gap ? ": " + row.gap : row.evidence ? " — " + row.evidence : ""));
+    const criticalGapsReason = gapRows.length
+      ? gapRows.map((row) => row.label + " — " + (row.gap || row.evidence || "insufficient evidence")).join("; ").slice(0, 400)
+      : criticals.length
+      ? "All categories flagged critical meet or exceed the minimum threshold based on available evidence."
+      : "No categories were flagged critical for this search.";
+    const confirmedSentences = splitSentences(e.keyConcernsSummary && e.keyConcernsSummary.confirmed);
+    let riskLevel = "Unknown";
+    if (ws.overallConfidenceLevel === "Low" || criticalGaps.length >= 2) riskLevel = "High";
+    else if (criticalGaps.length === 1 || confirmedSentences.length >= 2) riskLevel = "Moderate";
+    else if (typeof ws.weighted === "number") riskLevel = "Low";
+    const riskReason = confirmedSentences.length
+      ? confirmedSentences.slice(0, 2).join(" ").slice(0, 350)
+      : criticalGaps.length
+      ? criticalGapsReason.slice(0, 350)
+      : "No confirmed concerns identified in the available evidence.";
+    const overallFit = (e.overallFitRating && e.overallFitRating.rating) || "Not enough information to evaluate";
+    const fitReason = ((e.overallFitRating && e.overallFitRating.explanation) || "").slice(0, 350);
+    const recommendation = (e.recommendation && e.recommendation.choice) || "Not enough information";
+    const rankingNote = ((e.recommendation && e.recommendation.explanation) || "").slice(0, 160);
+    const covered = ws.categoriesScored != null && ws.categoriesNA != null ? ws.categoriesScored + ws.categoriesNA : null;
+    return {
+      rank: i + 1, candidateName: name,
+      weightedScore: typeof ws.weighted === "number" ? ws.weighted : null,
+      simpleAverage: typeof ws.raw === "number" ? ws.raw : null,
+      evidenceCoverage: covered ? Math.round((ws.categoriesScored / covered) * 100) + "%" : "—",
+      criticalGaps, criticalGapsReason, riskLevel, riskReason, overallFit, fitReason, recommendation, rankingNote,
+    };
+  });
+  const candidatesOut = ranked.map((r) => {
+    const e = r.json;
+    const snap = e.candidateSnapshot || {};
+    return {
+      name: snap.name || r.cand.name || "",
+      currentTitle: snap.title || "", currentCompany: snap.company || "", location: snap.location || "",
+      snapshot: e.overallFitRating && e.overallFitRating.explanation ? e.overallFitRating.explanation.split(". ")[0] : "",
+      scorecard: (e.scorecard || []).map((row) => ({ category: row.category, label: row.label, score: row.score, evidence: row.evidence, gap: row.gap, confidence: row.confidence })),
+      keyStrengthsSummary: e.keyStrengthsSummary || "",
+      keyConcernsSummary: e.keyConcernsSummary || { confirmed: "", possible: "" },
+      informationGaps: e.informationGaps || [],
+      mustHaveMatch: (e.mustHaveRequirements || []).map((m) => ({ requirement: m.requirement, status: m.status, evidence: m.evidence })),
+      niceHaveMatch: (e.niceToHaveRequirements || []).map((m) => ({ requirement: m.requirement, status: m.status, evidence: m.evidence })),
+      recommendation: (e.recommendation && e.recommendation.choice) || "",
+      recommendationExplanation: (e.recommendation && e.recommendation.explanation) || "",
+    };
+  });
+  const categoryComparisons = weights.map((w) => ({
+    category: w.label,
+    entries: ranked.map((r) => {
+      const row = (r.json.scorecard || []).find((sr) => sr.category === w.key);
+      return { candidateName: (r.json.candidateSnapshot && r.json.candidateSnapshot.name) || r.cand.name || "", score: row ? row.score : "N/A", evidence: row ? row.evidence : "" };
+    }),
+  }));
+  const tiers = { tier1: [], tier2: [], tier3: [], tier4: [] };
+  masterRanking.forEach((row) => tiers[tierForFit(row.overallFit)].push({ name: row.candidateName, reason: row.rankingNote || row.overallFit }));
+  const shortlist = masterRanking
+    .filter((r) => tierForFit(r.overallFit) === "tier1" || tierForFit(r.overallFit) === "tier2")
+    .slice(0, 8)
+    .map((r) => {
+      const co = candidatesOut.find((c2) => c2.name === r.candidateName) || {};
+      const strengthSentences = splitSentences(co.keyStrengthsSummary);
+      const concernSentences = splitSentences(co.keyConcernsSummary && co.keyConcernsSummary.confirmed) || [];
+      const possibleSentences = splitSentences(co.keyConcernsSummary && co.keyConcernsSummary.possible) || [];
+      return {
+        candidateName: r.candidateName,
+        whyIncluded: r.rankingNote || r.overallFit,
+        mainStrength: strengthSentences[0] || "—",
+        mainConcern: concernSentences[0] || possibleSentences[0] || "None noted",
+        validateNext: (co.informationGaps && co.informationGaps[0]) || "—",
+      };
+    });
+  const clientPresentationOrder = masterRanking.map((r) => ({ order: r.rank, candidateName: r.candidateName, reason: r.overallFit }));
+  const evaluationLimitations = [];
+  if (failedCount > 0) evaluationLimitations.push(failedCount + " candidate(s) could not be evaluated and are excluded from this comparison.");
+  const result = {
+    searchMeta: { candidateCount: ranked.length, roleTitle: "", weightingMethod: criticals.length ? "custom" : "default", criticalCriteria: criticals.slice(), evaluationLimitations },
+    masterRanking, candidates: candidatesOut, categoryComparisons,
+    headToHeadComparisons: [], archetypes: [], tradeoffs: [],
+    tiers, shortlist, clientPresentationOrder,
+    clientReadySummary: "", internalNotes: "",
+    batchInfo: { depth: "full (per-candidate)", note: "Each candidate evaluated independently in full — this scales to any number of candidates." },
+  };
+  const summaries = masterRanking.map((r) => {
+    const co = candidatesOut.find((c2) => c2.name === r.candidateName) || {};
+    return {
+      name: r.candidateName, weightedScore: r.weightedScore, fit: r.overallFit, recommendation: r.recommendation,
+      topStrengths: splitSentences(co.keyStrengthsSummary).slice(0, 2),
+      topConcerns: splitSentences(co.keyConcernsSummary && co.keyConcernsSummary.confirmed).slice(0, 2),
+      criticalGaps: r.criticalGaps,
+    };
+  });
+  return { result, summaries };
+}
+
+function friendlyBridgeError(e) {
+  const msg = (e && e.message) || String(e);
+  if (/failed to pass validation/i.test(msg) || /askClaude/i.test(msg) && /position 0/i.test(msg)) {
+    return new Error(
+      "The request was too large for the AI bridge to accept (this happens with very long role specs, PDFs, or a large number of candidates at once). " +
+      "It's usually already been shrunk automatically — try again, or trim the role spec/candidate text, or split a large candidate batch into two runs. " +
+      "Raw error: " + msg
+    );
+  }
+  return e instanceof Error ? e : new Error(msg);
+}
+
+async function callAskClaude(prompt, dataArr) {
+  let res;
+  try {
+    res = await window.cowork.askClaude(prompt, dataArr || []);
+  } catch (e) {
+    throw friendlyBridgeError(e);
+  }
+  const raw = extractAskClaudeText(res);
+  const json = parseJsonLoose(raw);
+  if (!json) { const err = new Error("Could not parse the AI response as JSON. Raw response:\n" + raw); err.raw = raw; throw err; }
+  return json;
+}
+
+/* ---------------------- shared render helpers ---------------------- */
+
+function field(label, innerHtml) { return '<label class="field"><span class="lbl">' + escapeHtml(label) + "</span>" + innerHtml + "</label>"; }
+function textInput(attrs, value, placeholder) { return '<input type="text" ' + attrs + ' placeholder="' + escapeAttr(placeholder || "") + '" value="' + escapeAttr(value) + '">'; }
+function textArea(attrs, value, placeholder, rows) { return '<textarea rows="' + (rows || 3) + '" ' + attrs + ' placeholder="' + escapeAttr(placeholder || "") + '">' + escapeHtml(value) + "</textarea>"; }
+function chip(text, variant) { return '<span class="chip chip-' + (variant || "gray") + '">' + escapeHtml(text) + "</span>"; }
+function fitVariant(fit) {
+  if (!fit) return "gray";
+  if (fit.includes("Strong") || fit === "Good fit") return "green";
+  if (fit.includes("Moderate")) return "orange";
+  if (fit.includes("Weak") || fit.includes("Does not")) return "red";
+  return "gray";
+}
+function riskVariant(risk) {
+  if (risk === "Low") return "green";
+  if (risk === "Moderate") return "amber";
+  if (risk === "High" || risk === "Critical") return "red";
+  return "gray";
+}
+function recVariant(rec) {
+  if (!rec) return "gray";
+  if (rec.startsWith("Advance to")) return "green";
+  if (rec.startsWith("Advance, but")) return "amber";
+  if (rec.startsWith("Do not")) return "red";
+  return "gray";
+}
+function scoreChipVariant(score) {
+  const n = Number(score);
+  if (score === "N/A" || Number.isNaN(n)) return "gray";
+  if (n >= 4) return "green";
+  if (n === 3) return "amber";
+  return "red";
+}
+function scoreDots(score) {
+  const n = Number(score);
+  if (score === "N/A" || Number.isNaN(n)) return '<span class="tiny muted">N/A</span>';
+  let dots = "";
+  for (let i = 1; i <= 5; i++) dots += '<span class="score-dot' + (i <= n ? " filled" : "") + '"></span>';
+  return '<span class="score-dots">' + dots + "</span>";
+}
+function bulletList(items, variant, emptyText) {
+  if (!items || !items.length) return '<p class="tiny muted">' + escapeHtml(emptyText || "None noted.") + "</p>";
+  return '<ul class="bullet-list bullet-' + (variant || "default") + '">' + items.map((it) => "<li>" + escapeHtml(typeof it === "string" ? it : JSON.stringify(it)) + "</li>").join("") + "</ul>";
+}
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard.")).catch(() => alert("Could not copy automatically — select the text and copy manually."));
+  } else alert("Clipboard unavailable — select the text and copy manually.");
+}
+
+/* ---------------------- header ---------------------- */
+
+function renderHeader() {
+  const modeLabels = { home: "", single: "Single Evaluation", compare: "Compare Candidates" };
+  return (
+    '<div class="topbar">' +
+    '<div class="topbar-left">' +
+    (state.mode !== "home" ? '<button class="home-btn" data-action="go-home">&larr; Home</button>' : "") +
+    '<div class="logo">S</div>' +
+    '<div class="wordmark-wrap"><div class="wordmark">SearchEval <span class="v2badge">V2</span></div><div class="brandtag">CARTER BALDWIN</div></div>' +
+    "</div>" +
+    '<div class="mode-label">' + escapeHtml(modeLabels[state.mode] || "") + "</div>" +
+    "</div>"
+  );
+}
+
+/* ---------------------- home screen ---------------------- */
+
+function renderHome() {
+  return (
+    '<div class="page center">' +
+    '<div class="eyebrow">Carter Baldwin Executive Search</div>' +
+    '<h1 class="home-h1">SearchEval V2</h1>' +
+    '<p class="home-sub">AI-powered candidate evaluation for Carter Baldwin consultants. Generate structured scorecards and multi-candidate comparisons in seconds.</p>' +
+    '<div class="grid-2" style="max-width:720px;margin:0 auto;text-align:left;">' +
+    '<div class="mode-card white" data-action="go-single"><div class="icon">&#128100;</div><h3>Single Evaluation</h3><p>Evaluate one candidate. Generates a full weighted scorecard, requirements match, strengths, concerns, and recommendation.</p></div>' +
+    '<div class="mode-card black" data-action="go-compare"><div class="icon">&#128101;</div><h3>Compare Candidates</h3><p>Compare any number of candidates with weighted scoring, tier rankings, head-to-head analysis, and Deep Dive per candidate.</p></div>' +
+    "</div>" +
+    '<div class="stats-row" style="max-width:640px;margin-left:auto;margin-right:auto;">' +
+    '<div><div class="stat-num">12</div><div class="stat-lbl">Scoring categories</div></div>' +
+    '<div><div class="stat-num">7</div><div class="stat-lbl">Comparison views</div></div>' +
+    '<div><div class="stat-num">&#8734;</div><div class="stat-lbl">Candidates per search</div></div>' +
+    '<div><div class="stat-num">2</div><div class="stat-lbl">Report formats</div></div>' +
+    "</div>" +
+    "</div>"
+  );
+}
+
+/* ---------------------- dropzone (shared) ---------------------- */
+
+const DOC_DROPZONE_ACCEPT = ".pdf,.docx,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation";
+function renderDocDropzone(scope, cid, fieldKey, doc, dragOver) {
+  const attrs = 'data-dz-scope="' + scope + '"' + (cid ? ' data-dz-cid="' + cid + '"' : "") + ' data-dz-field="' + fieldKey + '"';
+  const cls = "dropzone" + (dragOver ? " dragover" : "") + (doc ? " attached" : "");
+  return (
+    '<div class="' + cls + '" ' + attrs + ' data-action="dz-click">' +
+    "<p>" + (doc ? "&#10003; " + escapeHtml(doc.name) + (doc.status === "unsupported" ? " (paste text below — could not read this file)" : "") : "Drop PDF, Word, or PowerPoint here, or click to browse") + "</p>" +
+    '<input type="file" accept="' + DOC_DROPZONE_ACCEPT + '" style="display:none" ' + attrs + ' data-action="dz-input">' +
+    "</div>" +
+    (doc && doc.status === "unsupported"
+      ? '<textarea rows="3" ' + attrs + ' data-action="dz-manual-text" placeholder="Could not automatically read this file — paste its text here." style="margin-top:6px;">' + escapeHtml(doc.text || "") + "</textarea>"
+      : "") +
+    (doc ? '<button class="btn-link" style="margin-top:6px;" data-action="dz-remove" ' + attrs + '>Remove file</button>' : "")
+  );
+}
+
+/* ---------------------- weights panel (shared) ---------------------- */
+
+function renderWeightsPanel(weights, criticals, open) {
+  const total = weightsTotal(weights);
+  const ok = Math.abs(total - 100) < 0.5;
+  let body = "";
+  if (open) {
+    body =
+      '<div class="pad" style="border-top:1px solid var(--bd);">' +
+      '<div class="row" style="margin-bottom:12px;">' +
+      '<button class="btn btn-secondary" data-action="normalize-weights">Auto-normalize</button>' +
+      '<button class="btn btn-secondary" data-action="reset-weights">Reset defaults</button>' +
+      "</div>" +
+      weights.map((c) => {
+        const isCrit = criticals.includes(c.key);
+        return (
+          '<div class="wt-row">' +
+          '<input type="checkbox" data-action="toggle-critical" data-cat="' + c.key + '" ' + (isCrit ? "checked" : "") + ' title="Mark as critical">' +
+          '<span style="font-size:13px;">' + escapeHtml(c.label) + "</span>" +
+          '<input type="number" min="0" max="100" step="0.5" data-action="weight-input" data-cat="' + c.key + '" value="' + c.weight + '">' +
+          '<span class="tiny muted">%</span>' +
+          "</div>"
+        );
+      }).join("") +
+      "</div>";
+  }
+  return (
+    '<div class="card" style="margin-bottom:20px;">' +
+    '<div class="weights-bar" data-action="toggle-weights">' +
+    '<span class="wt-title">Scoring Weights &amp; Critical Criteria</span>' +
+    '<span><span class="wt-total ' + (ok ? "ok" : "bad") + '" id="wt-total-display">' + total.toFixed(0) + "%</span> <span class=\"muted\">" + (open ? "&#9652;" : "&#9662;") + "</span></span>" +
+    "</div>" +
+    body +
+    "</div>"
+  );
+}
+
+/* ---------------------- SINGLE mode: input ---------------------- */
+
+function renderSingleInput() {
+  const s = state.single;
+  const canGenerate = (s.candidateInfo.trim() || s.pdf) && !s.loading;
+  return (
+    '<div class="page page-narrow">' +
+    "<h1>Single Evaluation</h1>" +
+    '<p class="muted" style="margin:8px 0 24px;">Paste the role specification and the candidate\'s resume/LinkedIn/notes, or drop a PDF/Word/PowerPoint file for either. SearchEval will generate a full weighted scorecard.</p>' +
+    (s.error ? '<div class="error-box">' + escapeHtml(s.error) + "</div>" : "") +
+    '<div class="card pad" style="margin-bottom:16px;">' +
+    field("Role Specification", textArea('data-scope="single" data-field="roleSpec"', s.roleSpec, "Paste the job description, role spec, or describe the position...", 5)) +
+    renderDocDropzone("single-role", null, "roleDoc", s.roleDoc, s.roleDocDragOver) +
+    "</div>" +
+    '<div class="card pad" style="margin-bottom:16px;">' +
+    field("Candidate Information", textArea('data-scope="single" data-field="candidateInfo"', s.candidateInfo, "Paste resume, LinkedIn, interview notes, call notes...", 8)) +
+    renderDocDropzone("single", null, "pdf", s.pdf, s.dragOver) +
+    "</div>" +
+    '<button class="btn btn-primary btn-full" id="single-generate-btn" data-action="run-single" ' + (canGenerate ? "" : "disabled") + ">" + (s.loading ? "Generating…" : "Generate Scorecard") + "</button>" +
+    "</div>"
+  );
+}
+
+/* ---------------------- SINGLE mode: results ---------------------- */
+
+function renderSingleResults() {
+  const s = state.single;
+  const r = s.result;
+  return (
+    '<div class="page">' +
+    '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+    "<h1>" + escapeHtml((r.candidateSnapshot && r.candidateSnapshot.name) || "Evaluation") + "</h1>" +
+    '<button class="btn btn-secondary" data-action="new-single">New Evaluation</button>' +
+    "</div>" +
+    '<div class="tabs">' + STABS.map((t, i) => '<button class="tab-btn' + (s.tab === i ? " active" : "") + '" data-action="single-tab" data-idx="' + i + '">' + t + "</button>").join("") + "</div>" +
+    renderSingleTabContent(r, s.tab) +
+    "</div>"
+  );
+}
+
+function renderSingleTabContent(r, tab) {
+  if (tab === 0) return renderSingleOverview(r);
+  if (tab === 1) return renderSingleScorecard(r);
+  if (tab === 2) return renderSingleRequirements(r);
+  if (tab === 3) return renderSingleAnalysis(r);
+  if (tab === 4) return renderSingleStrategy(r);
+  return renderSingleAction(r);
+}
+
+function renderSingleOverview(r) {
+  const snap = r.candidateSnapshot || {};
+  const ws = r.weightedScore || {};
+  const fit = (r.overallFitRating || {}).rating || "";
+  const rows = [
+    ["Title", snap.title], ["Company", snap.company], ["Location", snap.location], ["Industry", snap.industry],
+    ["Functional Expertise", snap.functionalExpertise], ["Years of Experience", snap.yearsExperience], ["Education", snap.education],
+    ["Certifications", snap.certifications], ["Current Comp", snap.currentComp], ["Target Comp", snap.targetComp],
+    ["Mobility", snap.mobility], ["Process Status", snap.processStatus], ["Source Materials", snap.sourceMaterials],
+  ];
+  return (
+    '<div class="grid-4" style="margin-bottom:20px;">' +
+    '<div class="card pad"><div class="tiny muted">WEIGHTED SCORE</div><div style="font-size:22px;font-weight:800;">' + (ws.weighted != null ? Number(ws.weighted).toFixed(2) + " / 5" : "N/A") + "</div></div>" +
+    '<div class="card pad"><div class="tiny muted">PERCENTAGE</div><div style="font-size:22px;font-weight:800;">' + (ws.weightedPercentage != null ? Math.round(ws.weightedPercentage) + "%" : "N/A") + "</div></div>" +
+    '<div class="card pad"><div class="tiny muted">FIT RATING</div><div style="margin-top:4px;">' + chip(fit || "Unknown", fitVariant(fit)) + "</div></div>" +
+    '<div class="card pad"><div class="tiny muted">CONFIDENCE</div><div style="font-size:22px;font-weight:800;">' + escapeHtml(ws.overallConfidenceLevel || "—") + "</div></div>" +
+    "</div>" +
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Candidate Snapshot</div><div class="grid-3">' +
+    rows.map(([label, val]) => '<div><div class="tiny muted">' + label + '</div><div style="font-size:13.5px;">' + escapeHtml(val || "Not provided") + "</div></div>").join("") +
+    "</div></div>" +
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Role Being Evaluated For</div><p style="font-size:13.5px;">' + escapeHtml(r.roleEvaluatedFor || "Not provided") + '</p><span class="tiny muted">Evaluation standard: ' + escapeHtml(r.evaluationStandard || "Not specified") + "</span></div>" +
+    '<div class="card pad"><div class="stitle">Fit Explanation</div><p style="font-size:13.5px;line-height:1.6;">' + escapeHtml((r.overallFitRating || {}).explanation || "Not provided") + "</p><p class=\"tiny muted\">Interpretation: " + escapeHtml(ws.interpretation || "—") + " · Categories scored: " + (ws.categoriesScored != null ? ws.categoriesScored : "—") + " · N/A: " + (ws.categoriesNA != null ? ws.categoriesNA : "—") + "</p></div>"
+  );
+}
+
+function renderSingleScorecard(r) {
+  const rows = r.scorecard || [];
+  return (
+    '<div class="card pad">' +
+    '<table class="tbl"><thead><tr><th>Category</th><th>Weight</th><th>Score</th><th>Weighted</th><th>Evidence</th><th>Gap</th><th>Confidence</th></tr></thead><tbody>' +
+    rows.map((row) => (
+      "<tr><td>" + escapeHtml(row.label || row.category) + "</td><td>" + (row.weight != null ? row.weight + "%" : "—") + "</td><td>" + scoreDots(row.score) +
+      "</td><td>" + (row.weightedContribution != null ? Number(row.weightedContribution).toFixed(2) : "—") + "</td><td>" + escapeHtml(row.evidence || "Not provided") +
+      "</td><td>" + escapeHtml(row.gap || "None noted") + "</td><td>" + escapeHtml(row.confidence || "Unknown") + "</td></tr>"
+    )).join("") +
+    "</tbody></table></div>"
+  );
+}
+
+function reqTable(items) {
+  if (!items || !items.length) return '<p class="tiny muted">None provided.</p>';
+  return (
+    '<table class="tbl"><thead><tr><th>Requirement</th><th>Source</th><th>Status</th><th>Evidence</th><th>Gap</th><th>Confidence</th></tr></thead><tbody>' +
+    items.map((it) => (
+      "<tr><td>" + escapeHtml(it.requirement) + "</td><td>" + chip(it.source || "Assumed", it.source === "Client-provided" ? "gray" : "amber") +
+      "</td><td>" + chip(it.status || "Unknown", it.status === "Meets" ? "green" : it.status === "Does not meet" ? "red" : it.status === "Partially meets" ? "amber" : "gray") +
+      "</td><td>" + escapeHtml(it.evidence || "Not provided") + "</td><td>" + escapeHtml(it.gapOrConcern || "None noted") + "</td><td>" + escapeHtml(it.confidenceLevel || "Unknown") + "</td></tr>"
+    )).join("") + "</tbody></table>"
+  );
+}
+function renderSingleRequirements(r) {
+  return (
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Must-Have Requirements</div>' + reqTable(r.mustHaveRequirements) + "</div>" +
+    '<div class="card pad"><div class="stitle">Nice-to-Have Requirements</div>' + reqTable(r.niceToHaveRequirements) + "</div>"
+  );
+}
+
+function proseCard(title, text, variant) {
+  const border = variant === "green" ? "var(--gn)" : variant === "red" ? "var(--rd)" : variant === "amber" ? "var(--am)" : "var(--bd)";
+  return (
+    '<div class="card pad" style="border-left:3px solid ' + border + ';"><div class="stitle">' + escapeHtml(title) + "</div>" +
+    '<p style="font-size:13.5px;line-height:1.6;margin:0;">' + escapeHtml(text && text.trim() ? text : "Not provided.") + "</p></div>"
+  );
+}
+function renderSingleAnalysis(r) {
+  const kc = r.keyConcernsSummary || {};
+  return (
+    '<div style="margin-bottom:16px;">' + proseCard("Key Strengths", r.keyStrengthsSummary, "green") + "</div>" +
+    '<div class="grid-2" style="margin-bottom:16px;">' +
+    proseCard("Concerns — Confirmed by Evidence", kc.confirmed, "red") +
+    proseCard("Concerns — Possible, Needs Clarification", kc.possible, "amber") +
+    "</div>" +
+    '<div style="margin-bottom:16px;">' + proseCard("Candidate Motivation Read", r.candidateMotivationSummary, "default") + "</div>" +
+    '<div class="card pad"><div class="stitle">Information Gaps</div>' + bulletList(r.informationGaps, "amber") + "</div>"
+  );
+}
+
+function renderSingleStrategy(r) {
+  const p = r.howToPositionOpportunity || {};
+  return (
+    '<div class="grid-2">' +
+    '<div class="card pad"><div class="stitle">Emphasize</div><p style="font-size:13.5px;line-height:1.6;">' + escapeHtml(p.emphasize || "Not provided") + "</p></div>" +
+    '<div class="card pad"><div class="stitle">Don\'t Overemphasize</div><p style="font-size:13.5px;line-height:1.6;">' + escapeHtml(p.avoid || "Not provided") + "</p></div>" +
+    '<div class="card pad"><div class="stitle">Likely Objections</div><p style="font-size:13.5px;line-height:1.6;">' + escapeHtml(p.objections || "Not provided") + "</p></div>" +
+    '<div class="card pad"><div class="stitle">Verify Before Pitching</div><p style="font-size:13.5px;line-height:1.6;">' + escapeHtml(p.confirmFirst || "Not provided") + "</p></div>" +
+    "</div>"
+  );
+}
+
+function renderSingleAction(r) {
+  const rec = r.recommendation || {};
+  const qc = r.qualityCheck || {};
+  return (
+    '<div class="card pad report-client" style="border-radius:12px;margin-bottom:16px;"><div class="row" style="justify-content:space-between;"><div class="stitle" style="margin-bottom:8px;">Client-Ready Summary</div><button class="btn-link" data-action="copy-text" data-text="' + escapeAttr(r.clientReadySummary || "") + '">Copy</button></div><p style="font-size:13.5px;line-height:1.65;margin:0;white-space:pre-wrap;">' + escapeHtml(r.clientReadySummary || "Not provided") + "</p></div>" +
+    '<div class="card pad report-internal" style="border-radius:12px;margin-bottom:16px;"><div class="row" style="justify-content:space-between;"><span class="internal-pill">INTERNAL ONLY</span><button class="btn-link" data-action="copy-text" data-text="' + escapeAttr(r.internalConsultantNotes || "") + '">Copy</button></div><p style="font-size:13.5px;line-height:1.65;margin:8px 0 0;white-space:pre-wrap;">' + escapeHtml(r.internalConsultantNotes || "Not provided") + "</p></div>" +
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Recommendation</div>' + chip(rec.choice || "Not enough information", recVariant(rec.choice)) + '<p style="font-size:13.5px;line-height:1.6;margin-top:8px;">' + escapeHtml(rec.explanation || "") + "</p></div>" +
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Next Questions to Ask</div><ol style="font-size:13.5px;padding-left:20px;">' + (r.nextQuestions || []).map((q) => "<li style=\"margin-bottom:5px;\">" + escapeHtml(q) + "</li>").join("") + "</ol></div>" +
+    '<div class="card pad"><div class="stitle">Quality Check</div><div class="grid-2">' +
+    '<div><div class="tiny muted">Assumptions</div><p style="font-size:13px;">' + escapeHtml(qc.assumptions || "None noted") + "</p></div>" +
+    '<div><div class="tiny muted">Needs Verification</div><p style="font-size:13px;">' + escapeHtml(qc.needsVerification || "None noted") + "</p></div>" +
+    "</div><div class=\"row\" style=\"flex-wrap:wrap;margin-top:6px;\">" +
+    chip((qc.categoriesNA || 0) + " categories N/A", "gray") + chip(qc.weightsCustomized ? "Custom weights" : "Default weights", "gray") +
+    chip(qc.status || "Internal-only", qc.status === "Client-ready" ? "green" : "gray") + chip("Confidence: " + (qc.finalConfidenceLevel || "Unknown"), "gray") +
+    "</div></div>"
+  );
+}
+
+/* ---------------------- COMPARE mode: input ---------------------- */
+
+function progressLabel(p) {
+  if (!p) return "Working…";
+  if (p.stage === "requirements") return "Reading the role specification…";
+  if (p.stage === "candidates") return "Evaluating candidates (" + p.done + " of " + p.total + ")" + (p.currentName ? " — " + p.currentName : "") + "…";
+  if (p.stage === "synthesis") return "Building the comparison (rankings, tiers, head-to-head)…";
+  return "Working…";
+}
+function progressPct(p) {
+  if (!p) return 0;
+  if (p.stage === "requirements") return 3;
+  if (p.stage === "candidates") return p.total ? 5 + Math.round((p.done / p.total) * 85) : 5;
+  return 95;
+}
+function renderCompareInput() {
+  const c = state.compare;
+  const withContent = candidateCountWithContent(c.candidates);
+  const canGenerate = withContent >= 2 && !c.loading;
+  return (
+    '<div class="page">' +
+    "<h1>Compare Candidates</h1>" +
+    '<p class="muted" style="margin:8px 0 24px;max-width:760px;">Add as many candidates as you want — each one is evaluated independently in full, then automatically ranked, tiered, and compared. Adjust scoring weights as needed.</p>' +
+    (c.error ? '<div class="error-box">' + escapeHtml(c.error) + "</div>" : "") +
+    '<div class="card pad" style="margin-bottom:20px;">' +
+    field("Role Specification", textArea('data-scope="compare" data-field="roleSpec"', c.roleSpec, "Paste the job description, role spec, or describe the position...", 5)) +
+    renderDocDropzone("compare-role", null, "roleDoc", c.roleDoc, c.roleDocDragOver) +
+    "</div>" +
+    renderWeightsPanel(c.weights, c.criticals, c.weightsOpen) +
+    '<div class="grid-auto" style="margin-bottom:16px;">' +
+    c.candidates.map((cand, i) => renderCandidateEntry(cand, i)).join("") +
+    "</div>" +
+    (c.loading ? "" : '<div class="add-cand-card" style="margin-bottom:20px;" data-action="add-candidate"><span class="plus">+</span><span>Add Candidate</span></div>') +
+    '<button class="btn btn-primary btn-full" id="compare-generate-btn" data-action="run-compare" ' + (canGenerate ? "" : "disabled") + ">" + (c.loading ? "Generating…" : "Generate Comparison") + "</button>" +
+    '<p class="tiny muted center" id="compare-hint" style="margin-top:8px;' + (withContent < 2 && !c.loading ? "" : "display:none;") + '">Add content for at least 2 candidates to generate a comparison.</p>' +
+    (c.loading
+      ? '<div class="card pad" style="margin-top:14px;"><p class="tiny muted">' + escapeHtml(progressLabel(c.progress)) +
+        '</p><div style="background:var(--bd);border-radius:6px;height:6px;overflow:hidden;margin-top:8px;"><div style="background:var(--og);height:100%;width:' + progressPct(c.progress) + '%;transition:width .4s;"></div></div></div>'
+      : "") +
+    "</div>"
+  );
+}
+
+function renderCandidateEntry(cand, i) {
+  return (
+    '<div class="card pad cand-card">' +
+    (state.compare.candidates.length > 2 ? '<button class="btn-ghost" style="position:absolute;top:8px;right:8px;" data-action="remove-candidate" data-cid="' + cand.id + '">&times;</button>' : "") +
+    '<span class="cand-label">CANDIDATE ' + (i + 1) + "</span>" +
+    textInput('data-scope="compare-cand" data-cid="' + cand.id + '" data-field="name"', cand.name, "Candidate name (optional)") +
+    '<div style="height:8px;"></div>' +
+    textArea('data-scope="compare-cand" data-cid="' + cand.id + '" data-field="notes"', cand.notes, "Paste resume, LinkedIn, interview notes, call notes...", 5) +
+    '<div style="height:8px;"></div>' +
+    renderDocDropzone("compare-cand", cand.id, "pdf", cand.pdf, cand.dragOver) +
+    "</div>"
+  );
+}
+
+/* ---------------------- COMPARE mode: results ---------------------- */
+
+function renderCompareResults() {
+  const c = state.compare;
+  const r = c.result;
+  return (
+    '<div class="page">' +
+    '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+    "<h1>" + escapeHtml((r.searchMeta && r.searchMeta.roleTitle) || "Comparison") + "</h1>" +
+    '<button class="btn btn-secondary" data-action="new-compare">New Comparison</button>' +
+    "</div>" +
+    '<p class="tiny muted" style="margin-bottom:16px;">' + (r.searchMeta ? r.searchMeta.candidateCount + " candidates &middot; weighting: " + (r.searchMeta.weightingMethod || "default") + " &middot; every candidate evaluated in full" : "") + "</p>" +
+    '<div class="tabs">' + CTABS.map((t, i) => '<button class="tab-btn' + (c.tab === i ? " active" : "") + '" data-action="compare-tab" data-idx="' + i + '">' + t + "</button>").join("") + "</div>" +
+    renderCompareTabContent(r, c.tab) +
+    renderDeepDiveModal() +
+    "</div>"
+  );
+}
+
+function renderCompareTabContent(r, tab) {
+  if (tab === 0) return renderRankingsTab(r);
+  if (tab === 1) return renderCategoryGridTab(r);
+  if (tab === 2) return renderCompareRequirementsTab(r);
+  if (tab === 3) return renderHeadToHeadTab(r);
+  if (tab === 4) return renderInsightsTab(r);
+  if (tab === 5) return renderRecommendationsTab(r);
+  return renderReportsTab(r);
+}
+
+function findCandidateIdByName(name) {
+  const cand = state.compare.candidates.find((c) => c.name && c.name.trim() === name);
+  return cand ? cand.id : null;
+}
+
+function renderRankingsTab(r) {
+  const rows = r.masterRanking || [];
+  const expanded = state.compare._rankExpanded || {};
+  return (
+    '<div class="card pad">' +
+    '<table class="tbl"><thead><tr><th></th><th>Rank</th><th>Name</th><th>Weighted</th><th>Simple Avg</th><th>Evidence</th><th>Critical Gaps</th><th>Risk</th><th>Fit</th><th>Recommendation</th><th></th></tr></thead><tbody>' +
+    rows.map((row) => {
+      const cid = findCandidateIdByName(row.candidateName);
+      const isOpen = !!expanded[row.candidateName];
+      const hasGaps = row.criticalGaps && row.criticalGaps.length;
+      const mainRow =
+        "<tr>" +
+        '<td><button class="btn-link" data-action="toggle-rank-expand" data-name="' + escapeAttr(row.candidateName) + '" title="Explain">' + (isOpen ? "&#9652;" : "&#9662;") + "</button></td>" +
+        "<td class=\"" + (row.rank === 1 ? "rank-1" : "") + "\">#" + row.rank + "</td><td style=\"font-weight:700;\">" + escapeHtml(row.candidateName) +
+        "</td><td>" + (row.weightedScore != null ? Number(row.weightedScore).toFixed(2) : "—") + "</td><td>" + (row.simpleAverage != null ? Number(row.simpleAverage).toFixed(2) : "—") +
+        "</td><td>" + escapeHtml(row.evidenceCoverage || "—") + "</td><td>" + (hasGaps ? chip(row.criticalGaps.length + " gap(s)", "red") : chip("None", "green")) +
+        "</td><td>" + chip(row.riskLevel || "Unknown", riskVariant(row.riskLevel)) + "</td><td>" + chip(row.overallFit || "Unknown", fitVariant(row.overallFit)) +
+        "</td><td>" + chip(row.recommendation || "—", recVariant(row.recommendation)) +
+        "</td><td>" + (cid ? '<button class="btn-link" data-action="deep-dive" data-cid="' + cid + '">Deep Dive</button>' : "") + "</td></tr>";
+      if (!isOpen) return mainRow;
+      const detailRow =
+        '<tr><td colspan="10" style="background:var(--lt);border-bottom:2px solid var(--bd);">' +
+        '<div class="grid-3" style="padding:12px 4px;">' +
+        '<div><div class="tiny muted" style="margin-bottom:4px;">WHY THESE CRITICAL GAPS</div>' +
+        (hasGaps ? bulletList(row.criticalGaps, "red") : '<p class="tiny muted">No critical gaps identified.</p>') +
+        (row.criticalGapsReason ? '<p style="font-size:12.5px;margin-top:6px;">' + escapeHtml(row.criticalGapsReason) + "</p>" : "") + "</div>" +
+        '<div><div class="tiny muted" style="margin-bottom:4px;">WHY THIS RISK LEVEL</div>' + chip(row.riskLevel || "Unknown", riskVariant(row.riskLevel)) +
+        '<p style="font-size:12.5px;margin-top:6px;">' + escapeHtml(row.riskReason || "Not provided.") + "</p></div>" +
+        '<div><div class="tiny muted" style="margin-bottom:4px;">WHY THIS FIT RATING</div>' + chip(row.overallFit || "Unknown", fitVariant(row.overallFit)) +
+        '<p style="font-size:12.5px;margin-top:6px;">' + escapeHtml(row.fitReason || "Not provided.") + "</p></div>" +
+        "</div>" +
+        (row.rankingNote ? '<p class="tiny muted" style="padding:0 4px 8px;">Ranking note: ' + escapeHtml(row.rankingNote) + "</p>" : "") +
+        "</td></tr>";
+      return mainRow + detailRow;
+    }).join("") +
+    "</tbody></table></div>"
+  );
+}
+
+function renderCategoryGridTab(r) {
+  const cands = r.candidates || [];
+  const anyScorecards = cands.some((c) => c.scorecard && c.scorecard.length);
+  if (!anyScorecards) {
+    return '<div class="card pad"><p class="muted">No category-level scores available (the candidate evaluation may have failed — see Rankings tab). Use Deep Dive there to re-run a full per-category breakdown for any candidate.</p></div>';
+  }
+  const cats = CATEGORIES;
+  const expanded = state.compare._catExpanded || {};
+  return (
+    '<div class="card pad" style="overflow-x:auto;">' +
+    '<p class="tiny muted" style="margin-bottom:10px;">Click a category to see why each candidate was scored that way, and how much it counts toward the weighted total.</p>' +
+    '<table class="tbl"><thead><tr><th></th><th>Category</th><th>Weight</th>' + cands.map((c) => "<th>" + escapeHtml(c.name) + "</th>").join("") + "</tr></thead><tbody>" +
+    cats.map((cat) => {
+      const isOpen = !!expanded[cat.key];
+      const mainRow =
+        "<tr>" +
+        '<td><button class="btn-link" data-action="toggle-cat-expand" data-cat="' + cat.key + '" title="Explain">' + (isOpen ? "&#9652;" : "&#9662;") + "</button></td>" +
+        "<td>" + escapeHtml(cat.label) + "</td><td>" + cat.weight + "%</td>" +
+        cands.map((c) => {
+          const row = (c.scorecard || []).find((s) => s.category === cat.key);
+          const sc = row ? row.score : "N/A";
+          return "<td>" + chip(sc, scoreChipVariant(sc)) + "</td>";
+        }).join("") + "</tr>";
+      if (!isOpen) return mainRow;
+      const detailRow =
+        '<tr><td colspan="' + (3 + cands.length) + '" style="background:var(--lt);border-bottom:2px solid var(--bd);">' +
+        '<div class="grid-auto" style="padding:12px 4px;gap:12px;">' +
+        cands.map((c) => {
+          const row = (c.scorecard || []).find((s) => s.category === cat.key);
+          const sc = row ? row.score : "N/A";
+          return (
+            '<div class="card pad" style="background:var(--wh);">' +
+            '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:13px;">' + escapeHtml(c.name) + "</b>" + chip(sc, scoreChipVariant(sc)) + "</div>" +
+            '<p style="font-size:12.5px;line-height:1.55;margin:0;"><b>Why this score:</b> ' + escapeHtml((row && row.evidence) || "No evidence captured for this category.") + "</p>" +
+            (row && row.gap ? '<p style="font-size:12.5px;line-height:1.55;margin:6px 0 0;color:var(--am);"><b>Gap:</b> ' + escapeHtml(row.gap) + "</p>" : "") +
+            '<p class="tiny muted" style="margin-top:6px;">Weight: ' + cat.weight + "% of total &middot; Confidence: " + escapeHtml((row && row.confidence) || "Unknown") + "</p>" +
+            "</div>"
+          );
+        }).join("") +
+        "</div></td></tr>";
+      return mainRow + detailRow;
+    }).join("") +
+    "</tbody></table></div>"
+  );
+}
+
+function matrixTable(cands, key) {
+  const reqSet = [];
+  cands.forEach((c) => (c[key] || []).forEach((m) => { if (!reqSet.includes(m.requirement)) reqSet.push(m.requirement); }));
+  if (!reqSet.length) return '<p class="tiny muted">None provided.</p>';
+  return (
+    '<table class="tbl"><thead><tr><th>Requirement</th>' + cands.map((c) => "<th>" + escapeHtml(c.name) + "</th>").join("") + "</tr></thead><tbody>" +
+    reqSet.map((req) => (
+      "<tr><td>" + escapeHtml(req) + "</td>" +
+      cands.map((c) => {
+        const m = (c[key] || []).find((x) => x.requirement === req);
+        const st = m ? m.status : "Unknown";
+        return "<td>" + chip(st, st === "Meets" ? "green" : st === "Does not meet" ? "red" : st === "Partially meets" ? "amber" : "gray") + "</td>";
+      }).join("") + "</tr>"
+    )).join("") + "</tbody></table>"
+  );
+}
+function renderCompareRequirementsTab(r) {
+  const cands = r.candidates || [];
+  return (
+    '<div class="card pad" style="margin-bottom:16px;overflow-x:auto;"><div class="stitle">Must-Have Requirements</div>' + matrixTable(cands, "mustHaveMatch") + "</div>" +
+    '<div class="card pad" style="overflow-x:auto;"><div class="stitle">Nice-to-Have Requirements</div>' + matrixTable(cands, "niceHaveMatch") + "</div>"
+  );
+}
+
+function renderHeadToHeadTab(r) {
+  const pairs = r.headToHeadComparisons || [];
+  if (!pairs.length) return '<div class="card pad"><p class="muted">No head-to-head comparisons available for this run (the synthesis step may not have completed). Use Deep Dive on the Rankings tab for individual full evaluations, or generate the comparison again.</p></div>';
+  return pairs.map((p) => (
+    '<div class="card pad" style="margin-bottom:16px;">' +
+    '<h3 style="font-size:14px;margin-bottom:8px;">' + escapeHtml(p.candidateA) + " vs. " + escapeHtml(p.candidateB) + "</h3>" +
+    '<p style="font-size:13.5px;line-height:1.6;">' + escapeHtml(p.comparisonNarrative || "Not provided.") + "</p>" +
+    '<div class="row" style="flex-wrap:wrap;margin-top:10px;align-items:center;">' +
+    chip("Better fit: " + (p.betterFit || "Even"), "orange") +
+    "</div>" +
+    '<p style="font-size:13px;margin-top:8px;"><b>Recommended next step:</b> ' + escapeHtml(p.recommendedNextStep || "—") + "</p></div>"
+  )).join("");
+}
+
+function renderInsightsTab(r) {
+  const archetypes = r.archetypes || [];
+  const tradeoffs = r.tradeoffs || [];
+  return (
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Candidate Archetypes</div>' +
+    (archetypes.length ? '<div class="row" style="flex-wrap:wrap;">' + archetypes.map((a) => '<div class="chip chip-orange" style="text-transform:uppercase;font-size:10.5px;">' + escapeHtml(a.label) + ": " + escapeHtml(a.candidateName) + "</div>").join("") + "</div>" : '<p class="tiny muted">Not generated for this run.</p>') +
+    "</div>" +
+    '<div class="card pad"><div class="stitle">Trade-offs</div>' +
+    (tradeoffs.length ? tradeoffs.map((t) => (
+      '<div class="subcard" style="background:var(--lt);border-radius:8px;padding:10px;margin-bottom:8px;"><b style="font-size:13px;">' + escapeHtml(t.title) + "</b><p style=\"font-size:12.5px;line-height:1.5;margin:4px 0 0;\">" + escapeHtml(t.narrative || "") + "</p></div>"
+    )).join("") : '<p class="tiny muted">Not generated for this run.</p>') +
+    "</div>"
+  );
+}
+
+function tierCard(title, items, colorVar) {
+  return (
+    '<div class="card pad" style="border-left:4px solid ' + colorVar + ';margin-bottom:12px;"><b style="font-size:13px;">' + title + '</b>' +
+    (items && items.length ? '<ul class="bullet-list bullet-default" style="margin-top:8px;">' + items.map((it) => "<li><b>" + escapeHtml(it.name) + "</b> — " + escapeHtml(it.reason) + "</li>").join("") + "</ul>" : '<p class="tiny muted" style="margin-top:6px;">None.</p>') +
+    "</div>"
+  );
+}
+function renderRecommendationsTab(r) {
+  const t = r.tiers || {};
+  const shortlist = r.shortlist || [];
+  const order = r.clientPresentationOrder || [];
+  return (
+    '<div class="grid-2" style="margin-bottom:16px;">' +
+    tierCard("Tier 1 — Highest Priority", t.tier1, "var(--gn)") +
+    tierCard("Tier 2 — Possible, Needs Clarification", t.tier2, "var(--am)") +
+    tierCard("Tier 3 — Lower Priority", t.tier3, "var(--mt)") +
+    tierCard("Tier 4 — Not Enough Information", t.tier4, "var(--rd)") +
+    "</div>" +
+    '<div class="card pad" style="margin-bottom:16px;"><div class="stitle">Shortlist</div>' +
+    (shortlist.length ? '<table class="tbl"><thead><tr><th>Candidate</th><th>Why Included</th><th>Main Strength</th><th>Main Concern</th><th>Validate Next</th></tr></thead><tbody>' +
+      shortlist.map((s) => "<tr><td style=\"font-weight:700;\">" + escapeHtml(s.candidateName) + "</td><td>" + escapeHtml(s.whyIncluded) + "</td><td>" + escapeHtml(s.mainStrength) + "</td><td>" + escapeHtml(s.mainConcern) + "</td><td>" + escapeHtml(s.validateNext) + "</td></tr>").join("") + "</tbody></table>"
+      : '<p class="tiny muted">None provided.</p>') + "</div>" +
+    '<div class="card pad"><div class="stitle">Client Presentation Order</div><ol style="font-size:13.5px;padding-left:20px;">' +
+    order.map((o) => "<li style=\"margin-bottom:4px;\"><b>" + escapeHtml(o.candidateName) + "</b> — " + escapeHtml(o.reason) + "</li>").join("") + "</ol></div>"
+  );
+}
+
+function renderReportsTab(r) {
+  const sub = state.compare._reportSub || "client";
+  return (
+    '<div class="subtab-toggle">' +
+    '<button class="' + (sub === "client" ? "active" : "") + '" data-action="report-sub" data-sub="client">Client-Ready</button>' +
+    '<button class="' + (sub === "internal" ? "active" : "") + '" data-action="report-sub" data-sub="internal">Internal Only</button>' +
+    "</div>" +
+    (sub === "client"
+      ? '<div class="report-block report-client"><div class="row" style="justify-content:flex-end;margin-bottom:8px;"><button class="btn-link" data-action="copy-text" data-text="' + escapeAttr(r.clientReadySummary || "") + '">Copy</button></div>' + escapeHtml(r.clientReadySummary || "Not provided") + "</div>"
+      : '<div class="report-block report-internal"><div class="row" style="justify-content:space-between;margin-bottom:8px;"><span class="internal-pill">INTERNAL ONLY</span><button class="btn-link" data-action="copy-text" data-text="' + escapeAttr(r.internalNotes || "") + '">Copy</button></div>' + escapeHtml(r.internalNotes || "Not provided") + "</div>")
+  );
+}
+
+/* ---------------------- Deep Dive modal ---------------------- */
+
+function renderDeepDiveModal() {
+  const cid = state.compare.deepDiveOpenId;
+  if (!cid) return "";
+  const cand = state.compare.candidates.find((c) => c.id === cid);
+  if (!cand) return "";
+  let body;
+  if (cand.deepDiveLoading) body = '<p class="loading-note">Running full scorecard for ' + escapeHtml(cand.name || "this candidate") + '…</p>';
+  else if (cand.deepDiveError) body = '<div class="error-box">' + escapeHtml(cand.deepDiveError) + "</div>";
+  else if (cand.deepDive) {
+    const dd = cand.deepDive;
+    const ddTab = cand._ddTab || 0;
+    body =
+      '<div class="tabs">' + STABS.map((t, i) => '<button class="tab-btn' + (ddTab === i ? " active" : "") + '" data-action="deepdive-tab" data-cid="' + cid + '" data-idx="' + i + '">' + t + "</button>").join("") + "</div>" +
+      renderSingleTabContent(dd, ddTab);
+  } else body = "";
+  return (
+    '<div class="modal-overlay" data-action="close-deepdive">' +
+    '<div class="modal-panel" onclick="event.stopPropagation()">' +
+    '<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+    "<h2 style=\"font-size:17px;\">Deep Dive — " + escapeHtml(cand.name || "Candidate") + "</h2>" +
+    '<button class="btn-ghost" data-action="close-deepdive" style="font-size:20px;">&times;</button>' +
+    "</div>" + body +
+    "</div></div>"
+  );
+}
+
+/* ---------------------- app shell / router ---------------------- */
+
+function render() {
+  const app = document.getElementById("app");
+  let content = "";
+  if (state.mode === "home") content = renderHome();
+  else if (state.mode === "single") content = state.single.result ? renderSingleResults() : renderSingleInput();
+  else if (state.mode === "compare") content = state.compare.result ? renderCompareResults() : renderCompareInput();
+  app.innerHTML = renderHeader() + content;
+}
+
+/* ---------------------- actions ---------------------- */
+
+// Every dropzone (role spec on either screen, or a candidate's own materials) shares this same
+// resolver: scope says which state object to touch, cid picks the candidate (if any), and
+// fieldKey says which property on that object holds the uploaded doc ("pdf" or "roleDoc").
+function resolveDzTarget(scope, cid) {
+  if (scope === "single" || scope === "single-role") return state.single;
+  if (scope === "compare-role") return state.compare;
+  if (scope === "compare-cand") return state.compare.candidates.find((c) => c.id === cid);
+  return null;
+}
+async function addFiles(scope, cid, fieldKey, fileList) {
+  const files = Array.from(fileList);
+  if (!files.length) return;
+  const file = files[0];
+  const target = resolveDzTarget(scope, cid);
+  if (!target) return;
+  const key = fieldKey || "pdf";
+  target[key] = { name: file.name, size: file.size, text: "", status: "processing" };
+  render();
+  const result = await extractFileText(file);
+  target[key] = { name: file.name, size: file.size, text: result.text, status: result.status };
+  render();
+}
+
+// The "data" argument goes over the same bridge as "prompt" — cap it too so it can't be the
+// thing that trips the size validation even after the prompt itself has been trimmed.
+const MAX_DATA_ITEM_CHARS = 8000;
+function capDataArr(arr) { return arr.map((t) => capText(t || "", MAX_DATA_ITEM_CHARS)); }
+
+async function runSingle() {
+  const s = state.single;
+  s.loading = true; s.error = ""; render();
+  try {
+    const candidateText = (s.candidateInfo || "").trim() + (s.pdf && s.pdf.text ? "\n\n### " + s.pdf.name + "\n" + s.pdf.text : "");
+    const prompt = buildSinglePrompt(combineRoleSpecText(s), candidateText, CATEGORIES, []);
+    const json = await callAskClaude(prompt, capDataArr([candidateText]));
+    s.result = json; s.tab = 0;
+  } catch (e) {
+    s.error = e.message || String(e);
+  }
+  s.loading = false; render();
+}
+
+// Compare mode: no single call scales with candidate count anymore. Instead — one tiny setup
+// call, N independent bounded per-candidate calls (any N, run a few at a time), local JS
+// aggregation for ranking/tiers/category grid, and one tiny synthesis call at the end.
+const COMPARE_CONCURRENCY = 3;
+
+async function runCompare() {
+  const c = state.compare;
+  const withContent = c.candidates.filter((cand) => (cand.notes && cand.notes.trim()) || cand.pdf);
+  if (withContent.length < 2) return;
+  c.loading = true; c.error = ""; c.progress = { stage: "requirements", done: 0, total: withContent.length, currentName: "" }; render();
+  const roleSpecText = combineRoleSpecText(c);
+
+  let canonicalReq = null;
+  try {
+    canonicalReq = await callAskClaude(buildRequirementsExtractionPrompt(roleSpecText), [roleSpecText || ""]);
+  } catch (e) {
+    canonicalReq = null; // non-fatal — each candidate call will infer requirements on its own
+  }
+  c._canonicalReq = canonicalReq;
+
+  c.progress = { stage: "candidates", done: 0, total: withContent.length, currentName: "" }; render();
+  const evalResults = new Array(withContent.length);
+  let nextIdx = 0;
+  async function worker() {
+    while (nextIdx < withContent.length) {
+      const my = nextIdx++;
+      const cand = withContent[my];
+      c.progress.currentName = cand.name || "Candidate " + (my + 1);
+      render();
+      try {
+        const candidateText = combineCandidateText(cand);
+        const prompt = buildSinglePrompt(roleSpecText, candidateText, c.weights, c.criticals, canonicalReq);
+        const json = await callAskClaude(prompt, capDataArr([candidateText]));
+        evalResults[my] = { cand, json, error: null };
+      } catch (e) {
+        evalResults[my] = { cand, json: null, error: (e && e.message) || String(e) };
+      }
+      c.progress.done++; render();
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(COMPARE_CONCURRENCY, withContent.length) }, worker));
+
+  const successes = evalResults.filter((r) => r.json);
+  if (!successes.length) {
+    c.error = "None of the candidates could be evaluated. " + (evalResults[0] ? evalResults[0].error : "");
+    c.loading = false; c.progress = null; render();
+    return;
+  }
+
+  const built = buildCompareResultLocally(successes, c.weights, c.criticals, evalResults.length - successes.length);
+
+  c.progress = { stage: "synthesis", done: 0, total: 1, currentName: "" }; render();
+  try {
+    const synth = await callAskClaude(buildSynthesisPrompt(roleSpecText, c.weights, c.criticals, built.summaries), []);
+    built.result.headToHeadComparisons = synth.headToHeadComparisons || [];
+    built.result.archetypes = synth.archetypes || [];
+    built.result.tradeoffs = synth.tradeoffs || [];
+    built.result.clientReadySummary = synth.clientReadySummary || "";
+    built.result.internalNotes = synth.internalNotes || "";
+  } catch (e) {
+    built.result.searchMeta.evaluationLimitations.push("Cross-candidate narrative (head-to-head/archetypes/reports) unavailable this run.");
+  }
+
+  c.result = built.result;
+  c.tab = 0; c._reportSub = "client";
+  c.loading = false; c.progress = null; render();
+}
+
+async function runDeepDive(cid) {
+  const cand = state.compare.candidates.find((c) => c.id === cid);
+  if (!cand) return;
+  cand.deepDiveLoading = true; cand.deepDiveError = ""; state.compare.deepDiveOpenId = cid; render();
+  try {
+    const candidateText = combineCandidateText(cand);
+    const prompt = buildSinglePrompt(combineRoleSpecText(state.compare), candidateText, state.compare.weights, state.compare.criticals, state.compare._canonicalReq);
+    const json = await callAskClaude(prompt, capDataArr([candidateText]));
+    cand.deepDive = json; cand._ddTab = 0;
+  } catch (e) {
+    cand.deepDiveError = e.message || String(e);
+  }
+  cand.deepDiveLoading = false; render();
+}
+
+/* ---------------------- event wiring ---------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  render();
+  const app = document.getElementById("app");
+
+  app.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-action]");
+    if (!t) return;
+    const action = t.dataset.action;
+
+    if (action === "go-home") { state.mode = "home"; render(); return; }
+    if (action === "go-single") { state.mode = "single"; render(); return; }
+    if (action === "go-compare") { state.mode = "compare"; render(); return; }
+    if (action === "new-single") { state.single = { roleSpec: state.single.roleSpec, candidateInfo: "", pdf: null, dragOver: false, loading: false, error: "", result: null, tab: 0 }; render(); return; }
+    if (action === "new-compare") { state.compare.result = null; state.compare.error = ""; render(); return; }
+
+    if (action === "single-tab") { state.single.tab = Number(t.dataset.idx); render(); return; }
+    if (action === "compare-tab") { state.compare.tab = Number(t.dataset.idx); render(); return; }
+    if (action === "report-sub") { state.compare._reportSub = t.dataset.sub; render(); return; }
+
+    if (action === "run-single") { runSingle(); return; }
+    if (action === "run-compare") { runCompare(); return; }
+
+    if (action === "toggle-weights") { state.compare.weightsOpen = !state.compare.weightsOpen; render(); return; }
+    if (action === "normalize-weights") {
+      const total = weightsTotal(state.compare.weights);
+      if (total > 0) state.compare.weights.forEach((c) => { c.weight = Math.round((c.weight / total) * 1000) / 10; });
+      render(); return;
+    }
+    if (action === "reset-weights") { state.compare.weights = CATEGORIES.map((c) => ({ ...c })); render(); return; }
+
+    if (action === "add-candidate") { state.compare.candidates.push(newCandidate(state.compare.candidates.length + 1)); render(); return; }
+    if (action === "remove-candidate") { state.compare.candidates = state.compare.candidates.filter((c) => c.id !== t.dataset.cid); render(); return; }
+
+    if (action === "dz-click") { const input = t.querySelector("input[type=file]"); if (input) input.click(); return; }
+    if (action === "dz-remove") {
+      const target = resolveDzTarget(t.dataset.dzScope, t.dataset.dzCid);
+      if (target) target[t.dataset.dzField || "pdf"] = null;
+      render(); return;
+    }
+
+    if (action === "toggle-rank-expand") {
+      const name = t.dataset.name;
+      const cur = state.compare._rankExpanded || (state.compare._rankExpanded = {});
+      cur[name] = !cur[name];
+      render(); return;
+    }
+    if (action === "toggle-cat-expand") {
+      const cat = t.dataset.cat;
+      const cur = state.compare._catExpanded || (state.compare._catExpanded = {});
+      cur[cat] = !cur[cat];
+      render(); return;
+    }
+    if (action === "deep-dive") { runDeepDive(t.dataset.cid); return; }
+    if (action === "close-deepdive") { state.compare.deepDiveOpenId = null; render(); return; }
+    if (action === "deepdive-tab") {
+      const cand = state.compare.candidates.find((c) => c.id === t.dataset.cid);
+      if (cand) cand._ddTab = Number(t.dataset.idx);
+      render(); return;
+    }
+    if (action === "copy-text") { copyText(t.dataset.text || ""); return; }
+  });
+
+  app.addEventListener("dragover", (e) => {
+    const dz = e.target.closest(".dropzone");
+    if (dz) { e.preventDefault(); dz.classList.add("dragover"); }
+  });
+  app.addEventListener("dragleave", (e) => {
+    const dz = e.target.closest(".dropzone");
+    if (dz) dz.classList.remove("dragover");
+  });
+  app.addEventListener("drop", (e) => {
+    const dz = e.target.closest(".dropzone");
+    if (!dz) return;
+    e.preventDefault(); dz.classList.remove("dragover");
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(dz.dataset.dzScope, dz.dataset.dzCid, dz.dataset.dzField, e.dataTransfer.files);
+  });
+
+  app.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.matches("input[type=file]")) {
+      if (t.files && t.files.length) addFiles(t.dataset.dzScope, t.dataset.dzCid, t.dataset.dzField, t.files);
+      t.value = "";
+      return;
+    }
+    handleFieldEvent(e);
+  });
+  app.addEventListener("input", handleFieldEvent);
+
+  function handleFieldEvent(e) {
+    const t = e.target;
+    if (!(t.matches("input") || t.matches("textarea") || t.matches("select"))) return;
+
+    if (t.dataset.action === "weight-input") {
+      const cat = state.compare.weights.find((c) => c.key === t.dataset.cat);
+      if (cat) cat.weight = Number(t.value) || 0;
+      const total = weightsTotal(state.compare.weights);
+      const disp = document.getElementById("wt-total-display");
+      if (disp) { disp.textContent = total.toFixed(0) + "%"; disp.className = "wt-total " + (Math.abs(total - 100) < 0.5 ? "ok" : "bad"); }
+      return;
+    }
+    if (t.dataset.action === "toggle-critical") {
+      const key = t.dataset.cat;
+      const idx = state.compare.criticals.indexOf(key);
+      if (t.checked && idx === -1) state.compare.criticals.push(key);
+      if (!t.checked && idx !== -1) state.compare.criticals.splice(idx, 1);
+      return;
+    }
+    if (t.dataset.action === "dz-manual-text") {
+      const target = resolveDzTarget(t.dataset.dzScope, t.dataset.dzCid);
+      const key = t.dataset.dzField || "pdf";
+      if (target && target[key]) { target[key].text = t.value; if (t.value) target[key].status = "manual"; }
+      return;
+    }
+
+    const scope = t.dataset.scope;
+    if (scope === "single") {
+      state.single[t.dataset.field] = t.value;
+      // Plain text input never triggers a full render() (so the textarea keeps focus/cursor
+      // position) — so the Generate button's enabled state has to be kept in sync by hand here.
+      if (t.dataset.field === "candidateInfo") {
+        const btn = document.getElementById("single-generate-btn");
+        if (btn) btn.disabled = !((state.single.candidateInfo || "").trim() || state.single.pdf);
+      }
+      return;
+    }
+    if (scope === "compare") { state.compare[t.dataset.field] = t.value; return; }
+    if (scope === "compare-cand") {
+      const cand = state.compare.candidates.find((c) => c.id === t.dataset.cid);
+      if (cand) cand[t.dataset.field] = t.value;
+      if (t.dataset.field === "notes") {
+        const enough = candidateCountWithContent(state.compare.candidates) >= 2;
+        const btn = document.getElementById("compare-generate-btn");
+        if (btn) btn.disabled = !enough;
+        const hint = document.getElementById("compare-hint");
+        if (hint) hint.style.display = enough ? "none" : "";
+      }
+      return;
+    }
+  }
+});
+</script>
+</body>
+</html>
